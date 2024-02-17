@@ -42,7 +42,7 @@ jobs:
         run: tox
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
-        with:
+        uses: codecov/codecov-action@v3
+        env:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: captainhammy/houdini-core-tools
