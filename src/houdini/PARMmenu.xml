@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<menuDocument>
+    <menu>
+        <scriptItem id="relative_to_absolute_path">
+            <insertAfter>reference_menu</insertAfter>
+            <label>Convert to Absolute Path</label>
+            <context>
+                <expression><![CDATA[# Houdini Toolbox
+import houdini_core_tools.ui.parmmenu
+
+return houdini_core_tools.ui.parmmenu.convert_relative_to_absolute_path_context(kwargs)
+]]></expression>
+            </context>
+            <scriptCode><![CDATA[# Houdini Toolbox
+import houdini_core_tools.ui.parmmenu
+
+houdini_core_tools.ui.parmmenu.convert_relative_to_absolute_path(kwargs)
+]]></scriptCode>
+        </scriptItem>
+
+        <scriptItem id="absolute_to_relative_path">
+            <insertAfter>relative_to_absolute_path</insertAfter>
+            <label>Convert to Relative Path</label>
+            <context>
+                <expression><![CDATA[# Houdini Toolbox
+import houdini_core_tools.ui.parmmenu
+
+return houdini_core_tools.ui.parmmenu.convert_absolute_to_relative_path_context(kwargs)
+]]></expression>
+            </context>
+            <scriptCode><![CDATA[# Houdini Toolbox
+import houdini_core_tools.ui.parmmenu
+
+houdini_core_tools.ui.parmmenu.convert_absolute_to_relative_path(kwargs)
+]]></scriptCode>
+        </scriptItem>
+    </menu>
+</menuDocument>

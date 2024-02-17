@@ -1,0 +1,15 @@
+{
+    "hpath": [
+		"${HOUDINI_PACKAGE_PATH}/src/houdini"
+	],
+    "env": [
+        {
+            "PYTHONPATH":
+            [
+                "${HOUDINI_PACKAGE_PATH}/src/python", {
+                    "method": "prepend"
+                }
+            ]
+        }
+    ]
+}

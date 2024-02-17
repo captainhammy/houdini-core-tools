@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<menuDocument>
+    <menu>
+        <subMenu id="opmenu.actions_menu">
+            <scriptItem id="houdini_core_tools.absolute_reference_copy">
+                <label>Create Reference Copy (absolute)</label>
+                <insertAfter>opmenu.refcopy</insertAfter>
+                <scriptCode><![CDATA[# Houdini Core Tools
+import houdini_core_tools.ui.opmenu
+
+houdini_core_tools.ui.opmenu.create_absolute_reference_copy(kwargs)
+]]></scriptCode>
+            </scriptItem>
+        </subMenu>
+
+        <scriptItem id="houdini_toolbox.unlock_parents">
+            <label>Unlock All Parent Digital Assets</label>
+            <insertAfter>opmenu.vhda_options</insertAfter>
+            <context>
+                <expression><![CDATA[# Houdini Core Tools
+import houdini_core_tools.ui.opmenu
+
+return houdini_core_tools.ui.opmenu.unlock_parents_context(kwargs)
+]]></expression>
+            </context>
+            <scriptCode><![CDATA[# Houdini Core Tools
+import houdini_core_tools.ui.opmenu
+
+houdini_core_tools.ui.opmenu.unlock_parents(kwargs)
+]]></scriptCode>
+        </scriptItem>
+
+    </menu>
+</menuDocument>
