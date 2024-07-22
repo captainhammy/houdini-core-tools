@@ -124,9 +124,9 @@ def find_parameters_using_variable(variable: str) -> tuple[hou.Parm, ...]:
         # match $HIPNAME or $HIPFILE
         return bool(re.search(f"(?=.*{var}(?![a-zA-Z]))", value))
 
-    results = []
+    results: list[hou.Parm] = []
 
-    for variable_to_test in {search_variable, disambiguated_variable}:
+    for variable_to_test in (search_variable, disambiguated_variable):
         results.extend(_find_parameters_with_value(variable_to_test, _checker))
 
     return tuple(results)
