@@ -27,7 +27,7 @@ jobs:
           client_secret_key: ${{ secrets.SESI_SECRET_KEY }}
 
       - name: Install dependencies
-        run: python3 -m pip install tox tox-gh-actions
+        run: python3 -m pip install tox tox-gh-actions coverage
 
       - name: Test with tox
         run: tox
