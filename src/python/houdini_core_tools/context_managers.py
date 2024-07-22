@@ -136,7 +136,7 @@ def restore_current_selection() -> Generator[None, None, None]:
 
         # Restore the selection.
         for item in selected:
-            item.setSelected(True)  # noqa: FBT003
+            item.setSelected(True)
 
 
 @contextmanager
