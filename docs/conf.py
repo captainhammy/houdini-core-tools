@@ -32,7 +32,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    "hou": ("https://www.sidefx.com/docs/houdini/hom/hou", "https://github.com/captainhammy/Houdini-Toolbox/raw/master/objects_hou.inv"),
+    "hou": ("https://www.sidefx.com/docs/houdini/hom/hou", "objects_hou.inv"),
 }
 
 autodoc_mock_imports = ["hou", "nodegraphtitle"]

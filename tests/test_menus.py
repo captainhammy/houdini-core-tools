@@ -31,8 +31,8 @@ def test_get_menu_separator_entry():
 
 
 @pytest.mark.parametrize(
-    ("pre_items", "add_sep", "expected"),
-    [
+    "pre_items,add_sep,expected",
+    (
         (
             None,
             True,
@@ -53,7 +53,7 @@ def test_get_menu_separator_entry():
                 1,
             ),
         ),
-    ],
+    ),
 )
 def test_make_houdini_menu(pre_items, add_sep, expected):
     """Test houdini_core_tools.menus.make_houdini_menu()."""
