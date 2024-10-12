@@ -106,11 +106,16 @@
         ]
 
     [tool.ruff.lint.per-file-ignores]
+        "src/python/houdini_core_tools/math.py" = [
+            "A005",  # Module name shadowing builtin
+        ]
         "tests/*.py" = [
             "FBT003",  # Boolean positional
             "PLR2004",  # Magic value in comparison
             "PLR6301",  # 'no-self-use' for tests
             "PT004",  # Fixtures not returning anything not starting with _
+            "PT006",  # Expected tuple of parameter names instead of string
+            "PT007",  # Expected `list` instead of `tuple` for parametrized fixtures
             "PT012",  # pytest.raises() simple statement
             "TRY003",  # Long exception messages
         ]

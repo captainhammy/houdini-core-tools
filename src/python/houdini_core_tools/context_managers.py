@@ -4,9 +4,9 @@
 from __future__ import annotations
 
 # Standard Library
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from contextlib import ContextDecorator, contextmanager
-from typing import TYPE_CHECKING, Generator  # , Iterable
+from typing import TYPE_CHECKING
 
 # Houdini
 import hou

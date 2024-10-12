@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup licensing
-        uses: captainhammy/setup-hserver-action@v1.0
+        uses: captainhammy/setup-hserver-action@v1
         with:
           server: ${{ secrets.LICENSE_SERVER }}
           client_id: ${{ secrets.SESI_CLIENT_ID }}

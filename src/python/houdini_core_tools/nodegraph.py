@@ -6,13 +6,16 @@ from __future__ import annotations
 # Standard Library
 import enum
 import functools
-from typing import Callable
+from typing import TYPE_CHECKING
 
 # Third Party
 from singleton import Singleton
 
 # Houdini
 import nodegraphtitle
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Enums
 

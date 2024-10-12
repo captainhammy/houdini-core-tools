@@ -5,7 +5,10 @@ from __future__ import annotations
 
 # Standard Library
 import functools
-from typing import Callable, Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 # Globals
 

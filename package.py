@@ -41,6 +41,8 @@ tests = {
     }
 }
 
+help = "https://houdini-core-tools.readthedocs.io/"
+
 
 def commands():
     """Run commands on package setup."""
