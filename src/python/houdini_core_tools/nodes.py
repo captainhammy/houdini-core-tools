@@ -43,6 +43,18 @@ def disconnect_all_outputs(node: hou.Node) -> None:
             connection.outputNode().setInput(connection.inputIndex(), None)
 
 
+def get_node_author(node: hou.OpNode) -> str:
+    """Get the name of the node creator.
+
+    Args:
+        node: The node to get the author of.
+
+    Returns:
+        The author name.
+    """
+    return hou.hscript(f"opls -l {node.path()}")[0].strip().split()[-2]
+
+
 def get_node_message_nodes(node: hou.OpNode) -> tuple[hou.OpNode, ...]:
     """Get a list of the node's message nodes.
 

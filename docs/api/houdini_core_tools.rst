@@ -12,6 +12,14 @@ Subpackages
 Submodules
 ----------
 
+houdini\_core\_tools.bounding module
+--------------------------------------
+
+.. automodule:: houdini_core_tools.bounding
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 houdini\_core\_tools.context\_managers module
 ---------------------------------------------
 

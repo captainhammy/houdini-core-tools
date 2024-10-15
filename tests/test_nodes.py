@@ -24,6 +24,11 @@ def test_disconnect_all_inputs(obj_test_node):
     assert not node.inputs()
 
 
+def test_get_node_author(obj_test_node):
+    """Test houdini_core_tools.nodes.get_node_author()."""
+    assert houdini_core_tools.nodes.get_node_author(obj_test_node) == "grahamt"
+
+
 def test_disconnect_all_outputs(obj_test_node):
     """Test houdini_core_tools.nodes.disconnect_all_inputs()."""
     node = obj_test_node.node("file")
