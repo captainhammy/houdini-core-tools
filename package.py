@@ -28,7 +28,7 @@ def version() -> str:
 authors = ["graham thompson"]
 
 requires = [
-    "houdini",
+    "houdini-20.5+",
     "python_singleton",
 ]
 
