@@ -16,6 +16,79 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
+def check_minimum_polygon_vertex_count(
+    geometry: hou.Geometry, minimum_vertices: int, *, ignore_open: bool = True
+) -> bool:
+    """Check that all polygons have a minimum number of vertices.
+
+    This will ignore non-polygon types such as packed and volume primitives.
+
+    Args:
+        geometry: The geometry to check.
+        minimum_vertices: The minimum number of vertices a polygon must have.
+        ignore_open: Ignore polygons which are open.
+
+    Returns:
+        Whether all the polygons have the minimum number of vertices.
+    """
+    for prim in geometry.iterPrimsOfType(hou.primType.Polygon):
+        if prim.numVertices() < minimum_vertices:
+            if ignore_open and not prim.isClosed():
+                continue
+
+            return False
+
+    return True
+
+
+def connected_points(point: hou.Point) -> tuple[hou.Point, ...]:
+    """Get all points that share an edge with the point.
+
+    Args:
+        point: The source point.
+
+    Returns:
+        Connected points
+    """
+    prims = point.prims()
+
+    connected = set()
+
+    for prim in prims:
+        prim_points = prim.points()
+
+        for prim_point in prim_points:
+            if face_has_edge(prim, prim_point, point):
+                connected.add(prim_point)
+
+    return tuple(sorted(connected, key=lambda pt: pt.number()))
+
+
+def face_has_edge(face: hou.Face, point1: hou.Point, point2: hou.Point) -> bool:
+    """Test if the face has an edge between two points.
+
+    Args:
+        face: The face to check for an edge.
+        point1: A point to test for an edge with.
+        point2: A point to test for an edge with.
+
+    Returns:
+        Whether the points share an edge.
+    """
+    # Test for the edge.
+    edges: tuple[hou.Edge] = face.edges()
+
+    pt_nums = tuple(sorted([point1.number(), point2.number()]))
+
+    for edge in edges:
+        edge_pt_nums = tuple(sorted(point.number() for point in edge.points()))
+
+        if edge_pt_nums == pt_nums:
+            return True
+
+    return False
+
+
 def find_attrib(geometry: hou.Geometry, attrib_type: hou.attribType, name: str) -> hou.Attrib | None:
     """Find an attribute with a given name and type on the geometry.
 
@@ -109,6 +182,49 @@ def get_prims_from_list(geometry: hou.Geometry, prim_list: Sequence[int]) -> tup
     return geometry.globPrims(prim_str)
 
 
+def geometry_has_prims_with_shared_vertex_points(geometry: hou.Geometry) -> bool:
+    """Check if the geometry contains any primitives which have more than one vertex referencing the same point.
+
+    Args:
+        geometry: The geometry to check.
+
+    Returns:
+        Whether the geometry has any primitives with shared vertex points.
+    """
+    for prim in geometry.iterPrims():
+        vtx_count = prim.numVertices()
+
+        vtx_points = {vertex.point().number() for vertex in prim.vertices()}
+
+        if len(vtx_points) != vtx_count:
+            return True
+
+    return False
+
+
+def get_primitives_with_shared_vertex_points(
+    geometry: hou.Geometry,
+) -> tuple[hou.Prim, ...]:
+    """Get any primitives in the geometry which have more than one vertex referencing the same point.
+
+    Args:
+        geometry: The geometry to check.
+
+    Returns:
+        A list of any primitives which have shared vertex points.
+    """
+    prims = []
+    for prim in geometry.iterPrims():
+        vtx_count = prim.numVertices()
+
+        vtx_points = {vertex.point().number() for vertex in prim.vertices()}
+
+        if len(vtx_points) != vtx_count:
+            prims.append(prim)
+
+    return tuple(prims)
+
+
 def num_points(geometry: hou.Geometry) -> int:
     """Get the number of points in the geometry.
 
@@ -151,18 +267,6 @@ def num_vertices(geometry: hou.Geometry) -> int:
     return geometry.intrinsicValue("vertexcount")
 
 
-def num_prim_vertices(prim: hou.Prim) -> int:
-    """Get the number of vertices belonging to the primitive.
-
-    Args:
-        prim: The primitive to get the vertex count of.
-
-    Returns:
-        The vertex count.
-    """
-    return prim.intrinsicValue("vertexcount")
-
-
 def primitive_area(prim: hou.Prim) -> float:
     """Get the area of the primitive.
 
@@ -175,6 +279,24 @@ def primitive_area(prim: hou.Prim) -> float:
         The primitive area.
     """
     return prim.intrinsicValue("measuredarea")
+
+
+def primitive_bary_center(prim: hou.Prim) -> hou.Vector3:
+    """Get the barycenter of the primitive.
+
+    Args:
+        prim: The primitive to get the center of.
+
+    Returns:
+        The barycenter.
+    """
+    center = hou.Vector3()
+
+    for vertex in prim.vertices():
+        center += vertex.point().position()
+
+    # Construct a vector and return it.
+    return center / prim.numVertices()
 
 
 def primitive_bounding_box(prim: hou.Prim) -> hou.BoundingBox:
@@ -221,3 +343,60 @@ def primitive_volume(prim: hou.Prim) -> float:
         The primitive volume.
     """
     return prim.intrinsicValue("measuredvolume")
+
+
+def reverse_prim(prim: hou.Prim) -> None:
+    """Reverse the vertex order of the primitive.
+
+    Args:
+        prim: The primitive to reverse.
+
+    Raises:
+        GeometryPermissionError: If the target geometry is read only.
+    """
+    geometry = prim.geometry()
+
+    # Make sure the geometry is not read only.
+    if geometry.isReadOnly():
+        raise hou.GeometryPermissionError
+
+    verb = hou.sopNodeTypeCategory().nodeVerb("reverse")
+
+    new_geo = hou.Geometry()
+    verb.execute(new_geo, [geometry])
+
+    geometry.clear()
+    geometry.merge(new_geo)
+
+
+def shared_edges(face1: hou.Face, face2: hou.Face) -> tuple[hou.Edge, ...]:
+    """Get a tuple of any shared edges between two primitives.
+
+    Args:
+        face1: The face to check for shared edges.
+        face2: The other face to check for shared edges.
+
+    Returns:
+        A tuple of shared edges.
+    """
+    geometry = face1.geometry()
+
+    # A list of unique edges.
+    edges = set()
+
+    # Iterate over each vertex of the primitive.
+    for vertex in face1.vertices():
+        # Get the point for the vertex.
+        vertex_point = vertex.point()
+
+        # Iterate over all the connected points.
+        for connected in connected_points(vertex_point):
+            # Sort the points.
+            pt1, pt2 = sorted((vertex_point, connected), key=lambda pt: pt.number())
+
+            # Ensure the edge exists for both primitives.
+            if face_has_edge(face1, pt1, pt2) and face_has_edge(face2, pt1, pt2):
+                # Find the edge and add it to the list.
+                edges.add(geometry.findEdge(pt1, pt2))
+
+    return tuple(edges)
