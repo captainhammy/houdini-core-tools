@@ -18,6 +18,7 @@ pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 
 # Tests
 
+
 def test__get_names_in_folder(obj_test_node):
     """Test houdini_core_tools.parameters._get_names_in_folder()."""
     node = obj_test_node.node("null")
