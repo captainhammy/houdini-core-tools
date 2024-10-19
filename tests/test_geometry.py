@@ -39,11 +39,12 @@ def test_check_minimum_polygon_vertex_count(obj_test_geo, min_verts, ignore_open
     )
 
 
-def test_connected_points(obj_test_geo):
+@pytest.mark.parametrize("pt_num,expected", ((4, (1, 3, 5, 7)),))
+def test_connected_points(obj_test_geo, pt_num, expected):
     """Test houdini_core_tools.geometry.connected_points."""
-    target = obj_test_geo.globPoints("1 3 5 7")
+    target = obj_test_geo.globPoints(" ".join(str(ptnum) for ptnum in expected))
 
-    points = houdini_core_tools.geometry.connected_points(obj_test_geo.iterPoints()[4])
+    points = houdini_core_tools.geometry.connected_points(obj_test_geo.iterPoints()[pt_num])
 
     assert points == target
 
@@ -106,6 +107,57 @@ def test_geo_details_match(obj_test_node, detail1, detail2, expected):
 
 
 @pytest.mark.parametrize(
+    "node_name,expected",
+    (
+        ("no_shared", False),
+        ("shared", True),
+    ),
+)
+def test_geometry_has_prims_with_shared_vertex_points(obj_test_node, node_name, expected):
+    """Test houdini_core_tools.geometry.geometry_has_prims_with_shared_vertex_points()."""
+    geometry = obj_test_node.node(node_name).geometry()
+
+    assert houdini_core_tools.geometry.geometry_has_prims_with_shared_vertex_points(geometry) == expected
+
+
+@pytest.mark.parametrize(
+    "node_name,context,expected",
+    (
+        ("RAW", pytest.raises(exceptions.PrimitiveIsRawGeometryError), None),
+        (
+            "XFORMED",
+            nullcontext(),
+            hou.Matrix4((
+                (0.6819891929626465, -0.7313622236251831, 0.0, 0.0),
+                (0.48333778977394104, 0.4507084786891937, -0.7504974603652954, 0.0),
+                (0.5488855242729187, 0.5118311643600464, 0.660873293876648, 0.0),
+                (0.3173518180847168, 0.38005995750427246, -0.6276679039001465, 1.0),
+            )),
+        ),
+        (
+            "SINGLE_POINT",
+            nullcontext(),
+            hou.Matrix4((
+                (-0.42511632340174754, 0.8177546905539287, -0.38801208441803603, 0.0),
+                (-0.3819913447800112, 0.2265424934082094, 0.895969369562124, 0.0),
+                (0.8205843796286518, 0.5291084621865726, 0.21606830205289468, 0.0),
+                (0.0, 0.0, 0.0, 1.0),
+            )),
+        ),
+    ),
+)
+def test_get_oriented_point_transform(obj_test_node, node_name, context, expected):
+    """Test houdini_core_tools.geometry.get_oriented_point_transform()."""
+    geo = obj_test_node.node(node_name).geometry()
+    pt = geo.points()[0]
+
+    with context:
+        result = houdini_core_tools.geometry.get_oriented_point_transform(pt)
+
+        assert result.isAlmostEqual(expected)
+
+
+@pytest.mark.parametrize(
     "points_list,expected",
     (
         ([], ()),
@@ -144,20 +196,6 @@ def test_get_prims_from_list(obj_test_geo, prims_list, expected):
 @pytest.mark.parametrize(
     "node_name,expected",
     (
-        ("no_shared", False),
-        ("shared", True),
-    ),
-)
-def test_geometry_has_prims_with_shared_vertex_points(obj_test_node, node_name, expected):
-    """Test houdini_core_tools.geometry.geometry_has_prims_with_shared_vertex_points()."""
-    geometry = obj_test_node.node(node_name).geometry()
-
-    assert houdini_core_tools.geometry.geometry_has_prims_with_shared_vertex_points(geometry) == expected
-
-
-@pytest.mark.parametrize(
-    "node_name,expected",
-    (
         ("no_shared", ()),
         ("shared", (81,)),
     ),
@@ -172,14 +210,45 @@ def test_get_primitives_with_shared_vertex_points(obj_test_node, node_name, expe
     assert result == expected_prims
 
 
+class Test_group_bounding_box:
+    """Test houdini_core_tools.geometry.group_bounding_box()."""
+
+    def test_point_group(self, obj_test_geo):
+        """Test getting the bounding box from a point group."""
+        target = hou.BoundingBox(-4, 0, -1, -2, 0, 2)
+
+        group = obj_test_geo.pointGroups()[0]
+        bbox = houdini_core_tools.geometry.group_bounding_box(group)
+
+        assert bbox == target
+
+    def test_prim_group(self, obj_test_geo):
+        """Test getting the bounding box from a prim group."""
+        target = hou.BoundingBox(-5, 0, -4, 4, 0, 5)
+
+        group = obj_test_geo.primGroups()[0]
+        bbox = houdini_core_tools.geometry.group_bounding_box(group)
+
+        assert bbox == target
+
+    def test_edge_group(self, obj_test_geo):
+        """Test getting the bounding box from an edge group."""
+        target = hou.BoundingBox(-5, 0, -5, 4, 0, 5)
+
+        group = obj_test_geo.edgeGroups()[0]
+        bbox = houdini_core_tools.geometry.group_bounding_box(group)
+
+        assert bbox == target
+
+    def test_invalid(self):
+        """Test an invalid argument."""
+        with pytest.raises(TypeError):
+            houdini_core_tools.geometry.group_bounding_box(None)
+
+
 def test_num_points(obj_test_geo):
     """Test houdini_core_tools.geometry.num_points."""
     assert houdini_core_tools.geometry.num_points(obj_test_geo) == 5000
-
-
-# def test_num_prim_vertices(obj_test_geo):
-#     """Test houdini_core_tools.geometry.num_prim(vertices()."""
-#     assert houdini_core_tools.geometry.num_prim_vertices(obj_test_geo.prims()[0]) == 3
 
 
 def test_num_prims(obj_test_geo):
@@ -192,48 +261,67 @@ def test_num_vertices(obj_test_geo):
     assert houdini_core_tools.geometry.num_vertices(obj_test_geo) == 48
 
 
-def test_primitive_area(obj_test_geo):
+@pytest.mark.parametrize(
+    "node_name",
+    (
+        "v_N_up",
+        "v_up",
+        "pscale_scale",
+        "trans_rot_pivot",
+        "orient",
+    ),
+)
+def test_point_instance_transform(obj_test_node, node_name):
+    """Test houdini_core_tools.geometry.point_instance_transform()."""
+    geometry = obj_test_node.node(node_name).geometry()
+    pt = geometry.points()[0]
+
+    expected_geo = obj_test_node.node(f"{node_name}_EXPECTED").geometry()
+    prim_transform = expected_geo.prims()[0].fullTransform()
+
+    result = houdini_core_tools.geometry.point_instance_transform(pt)
+
+    assert result.isAlmostEqual(prim_transform)
+
+
+@pytest.mark.parametrize("prim_num,expected", ((0, 4.375),))
+def test_primitive_area(obj_test_geo, prim_num, expected):
     """Test houdini_core_tools.geometry.primitive_area()."""
-    target = 4.375
-    prim = obj_test_geo.iterPrims()[0]
+    prim = obj_test_geo.iterPrims()[prim_num]
 
-    assert houdini_core_tools.geometry.primitive_area(prim) == target
+    assert houdini_core_tools.geometry.primitive_area(prim) == expected
 
 
-def test_primitive_bary_center(obj_test_geo):
+@pytest.mark.parametrize("prim_num,expected", ((0, hou.Vector3(1.5, 1, -1)),))
+def test_primitive_bary_center(obj_test_geo, prim_num, expected):
     """Test houdini_core_tools.geometry.primitive_bary_center()."""
-    target = hou.Vector3(1.5, 1, -1)
+    prim = obj_test_geo.iterPrims()[prim_num]
 
-    prim = obj_test_geo.iterPrims()[0]
-
-    assert houdini_core_tools.geometry.primitive_bary_center(prim) == target
+    assert houdini_core_tools.geometry.primitive_bary_center(prim) == expected
 
 
-def test_primitive_bounding_box(obj_test_geo):
+@pytest.mark.parametrize("prim_num,expected", ((0, hou.BoundingBox(-0.75, 0, -0.875, 0.75, 1.5, 0.875)),))
+def test_primitive_bounding_box(obj_test_geo, prim_num, expected):
     """Test houdini_core_tools.geometry.primitive_bounding_box()."""
-    target = hou.BoundingBox(-0.75, 0, -0.875, 0.75, 1.5, 0.875)
+    prim = obj_test_geo.iterPrims()[prim_num]
 
-    prim = obj_test_geo.iterPrims()[0]
-
-    assert houdini_core_tools.geometry.primitive_bounding_box(prim) == target
+    assert houdini_core_tools.geometry.primitive_bounding_box(prim) == expected
 
 
-def test_primitive_perimeter(obj_test_geo):
+@pytest.mark.parametrize("prim_num,expected", ((0, 6.5),))
+def test_primitive_perimeter(obj_test_geo, prim_num, expected):
     """Test houdini_core_tools.geometry.primitive_perimeter()."""
-    target = 6.5
+    prim = obj_test_geo.iterPrims()[prim_num]
 
-    prim = obj_test_geo.iterPrims()[0]
-
-    assert houdini_core_tools.geometry.primitive_perimeter(prim) == target
+    assert houdini_core_tools.geometry.primitive_perimeter(prim) == expected
 
 
-def test_primitive_volume(obj_test_geo):
+@pytest.mark.parametrize("prim_num,expected", ((0, 0.1666666716337204),))
+def test_primitive_volume(obj_test_geo, prim_num, expected):
     """Test houdini_core_tools.geometry.primitive_volume()."""
-    target = 0.1666666716337204
+    prim = obj_test_geo.iterPrims()[prim_num]
 
-    prim = obj_test_geo.iterPrims()[0]
-
-    assert hou.almostEqual(houdini_core_tools.geometry.primitive_volume(prim), target)
+    assert hou.almostEqual(houdini_core_tools.geometry.primitive_volume(prim), expected)
 
 
 class Test_reverse_prim:

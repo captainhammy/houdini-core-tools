@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 # Houdini Core Tools
-from houdini_core_tools import exceptions
+from houdini_core_tools import exceptions, math
 
 # Houdini
 import hou
@@ -140,6 +140,65 @@ def geo_details_match(geometry1: hou.Geometry, geometry2: hou.Geometry) -> bool:
     return details_match
 
 
+def geometry_has_prims_with_shared_vertex_points(geometry: hou.Geometry) -> bool:
+    """Check if the geometry contains any primitives which have more than one vertex referencing the same point.
+
+    Args:
+        geometry: The geometry to check.
+
+    Returns:
+        Whether the geometry has any primitives with shared vertex points.
+    """
+    for prim in geometry.iterPrims():
+        vtx_count = prim.numVertices()
+
+        vtx_points = {vertex.point().number() for vertex in prim.vertices()}
+
+        if len(vtx_points) != vtx_count:
+            return True
+
+    return False
+
+
+def get_oriented_point_transform(point: hou.Point) -> hou.Matrix4:
+    """Get a transform matrix from a point.
+
+    This matrix may be the result of standard point instance attributes or if the
+    point has any non-raw geometry primitives bound to it (PackedPrim, Quadric, VDB, Volume)
+    then the transform from the first primitive will be returned.
+
+    Args:
+        point: The point.
+
+    Returns:
+        A matrix representing the point transform.
+
+    Raises:
+        hou.OperationFailed: If the connected prim is a face or surface.
+    """
+    # Check for connected primitives.
+    prims = point.prims()
+
+    if prims:
+        # Get the first one. This is probably the only one unless you're doing
+        # something strange.
+        prim = prims[0]
+
+        # If the primitive is a Face of Surface we can't do anything.
+        if isinstance(prim, (hou.Face, hou.Surface)):
+            raise exceptions.PrimitiveIsRawGeometryError(point)
+
+        # Get the primitive's rotation matrix.
+        rot_matrix = prim.transform()
+
+        # Create a full transform matrix using the point position as well.
+        return hou.Matrix4(rot_matrix) * hou.hmath.buildTranslate(point.position())
+
+    # Just a simple unattached point, so we can return the standard point instance
+    # matrix.
+    return point_instance_transform(point)
+
+
 def get_points_from_list(geometry: hou.Geometry, point_list: Sequence[int]) -> tuple[hou.Point, ...]:
     """Convert a list of point numbers to hou.Point objects.
 
@@ -182,26 +241,6 @@ def get_prims_from_list(geometry: hou.Geometry, prim_list: Sequence[int]) -> tup
     return geometry.globPrims(prim_str)
 
 
-def geometry_has_prims_with_shared_vertex_points(geometry: hou.Geometry) -> bool:
-    """Check if the geometry contains any primitives which have more than one vertex referencing the same point.
-
-    Args:
-        geometry: The geometry to check.
-
-    Returns:
-        Whether the geometry has any primitives with shared vertex points.
-    """
-    for prim in geometry.iterPrims():
-        vtx_count = prim.numVertices()
-
-        vtx_points = {vertex.point().number() for vertex in prim.vertices()}
-
-        if len(vtx_points) != vtx_count:
-            return True
-
-    return False
-
-
 def get_primitives_with_shared_vertex_points(
     geometry: hou.Geometry,
 ) -> tuple[hou.Prim, ...]:
@@ -223,6 +262,40 @@ def get_primitives_with_shared_vertex_points(
             prims.append(prim)
 
     return tuple(prims)
+
+
+def group_bounding_box(group: hou.EdgeGroup | hou.PointGroup | hou.PrimGroup) -> hou.BoundingBox:
+    """Get the bounding box of the group.
+
+    Args:
+        group: The group to get the bounding box for.
+
+    Returns:
+        The bounding box for the group.
+
+    Raises:
+        TypeError: If the object is not a supported group type.
+    """
+    if isinstance(group, hou.EdgeGroup):
+        points = [point for edge in group.edges() for point in edge.points()]
+
+    elif isinstance(group, hou.PointGroup):
+        points = group.points()
+
+    elif isinstance(group, hou.PrimGroup):
+        points = [point for prim in group.prims() for point in prim.points()]
+
+    else:
+        raise TypeError(group)
+
+    pos0 = points[0].position()
+
+    bbox = hou.BoundingBox(pos0[0], pos0[1], pos0[2], pos0[0], pos0[1], pos0[2])
+
+    for point in points[1:]:
+        bbox.enlargeToContain(point.position())
+
+    return bbox
 
 
 def num_points(geometry: hou.Geometry) -> int:
@@ -265,6 +338,74 @@ def num_vertices(geometry: hou.Geometry) -> int:
         The vertex count.
     """
     return geometry.intrinsicValue("vertexcount")
+
+
+def point_instance_transform(point: hou.Point) -> hou.Matrix4:  # noqa: PLR0914
+    """Get a point's instance transform based on existing attributes.
+
+    Args:
+        point: The point.
+
+    Returns:
+        A matrix representing the instance transform.
+    """
+    geometry = point.geometry()
+    position = point.position()
+
+    direction = None
+
+    n_attr = geometry.findPointAttrib("N")
+    if n_attr is not None:
+        direction = hou.Vector3(point.attribValue(n_attr))
+    else:
+        v_attr = geometry.findPointAttrib("v")
+        if v_attr is not None:
+            direction = hou.Vector3(point.attribValue(v_attr))
+
+    pscale_attr = geometry.findPointAttrib("pscale")
+    pscale = point.attribValue(pscale_attr) if pscale_attr is not None else 1.0
+
+    scale = None
+    scale_attr = geometry.findPointAttrib("scale")
+    if scale_attr is not None:
+        scale = hou.Vector3(point.attribValue(scale_attr))
+
+    up_vector = None
+    up_attr = geometry.findPointAttrib("up")
+    if up_attr is not None:
+        up_vector = hou.Vector3(point.attribValue(up_attr))
+
+    rot = None
+    rot_attr = geometry.findPointAttrib("rot")
+    if rot_attr is not None:
+        rot = hou.Quaternion(point.attribValue(rot_attr))
+
+    trans = None
+    trans_attr = geometry.findPointAttrib("trans")
+    if trans_attr is not None:
+        trans = hou.Vector3(point.attribValue(trans_attr))
+
+    pivot = None
+    pivot_attr = geometry.findPointAttrib("pivot")
+    if pivot_attr is not None:
+        pivot = hou.Vector3(point.attribValue(pivot_attr))
+
+    orient = None
+    orient_attr = geometry.findPointAttrib("orient")
+    if orient_attr is not None:
+        orient = hou.Quaternion(point.attribValue(orient_attr))
+
+    return math.build_instance_matrix(
+        position,
+        direction,
+        pscale,
+        scale,
+        up_vector,
+        rot,
+        trans,
+        pivot,
+        orient,
+    )
 
 
 def primitive_area(prim: hou.Prim) -> float:

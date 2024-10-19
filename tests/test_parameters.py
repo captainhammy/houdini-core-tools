@@ -353,21 +353,25 @@ def test_get_multiparm_start_offset(obj_test_node, parm_name, context, expected)
         assert houdini_core_tools.parameters.get_multiparm_start_offset(parm_template) == expected
 
 
-def test_get_multiparm_template_name(obj_test_node):
+@pytest.mark.parametrize(
+    "parm_name,expected",
+    (
+        ("base", None),
+        ("inner0", "inner#"),
+        ("vecparm0", "vecparm#"),
+        ("leaf1_3", "leaf#_#"),
+    ),
+)
+def test_get_multiparm_template_name(obj_test_node, parm_name, expected):
     """Test houdini_core_tools.parameters.get_multiparm_template_name()."""
     node = obj_test_node.node("null")
 
-    parm = node.parm("base")
-    assert houdini_core_tools.parameters.get_multiparm_template_name(parm) is None
+    parm_item = node.parm(parm_name)
 
-    parm = node.parm("inner0")
-    assert houdini_core_tools.parameters.get_multiparm_template_name(parm) == "inner#"
+    if parm_item is None:
+        parm_item = node.parmTuple(parm_name)
 
-    parm_tuple = node.parmTuple("vecparm0")
-    assert houdini_core_tools.parameters.get_multiparm_template_name(parm_tuple) == "vecparm#"
-
-    parm = node.parm("leaf1_3")
-    assert houdini_core_tools.parameters.get_multiparm_template_name(parm) == "leaf#_#"
+    assert houdini_core_tools.parameters.get_multiparm_template_name(parm_item) == expected
 
 
 @pytest.mark.parametrize(

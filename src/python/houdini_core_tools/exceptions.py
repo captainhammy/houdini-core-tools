@@ -77,6 +77,13 @@ class ParmTupleTypeError(ValueError):
         super().__init__(f"Parm tuple '{parm_tuple}' is not a {expected_type}.")
 
 
+class PrimitiveIsRawGeometryError(ValueError):
+    """Exception for when a point is bound to a primitive that is raw geometry."""
+
+    def __init__(self, point: hou.Point) -> None:
+        super().__init__(f"Point {point.number()} is bound to raw geometry.")
+
+
 class UnexpectedAttributeTypeError(ValueError):
     """Exception for passing an invalid hou.attribType value."""
 
