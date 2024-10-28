@@ -91,6 +91,17 @@ class UnexpectedAttributeTypeError(ValueError):
         super().__init__(f"Expected a hou.attribType value, got {type(value)}")
 
 
+class UnsupportedCategoryError(ValueError):
+    """Exception raised when an invalid node type category is passed.
+
+    Args:
+        category: The invalid node type category.
+    """
+
+    def __init__(self, category: hou.NodeTypeCategory) -> None:
+        super().__init__(f"Unknown category type {category.name()}")
+
+
 class VectorIsZeroVectorError(ValueError):
     """Exception for a zero vector being passed."""
 

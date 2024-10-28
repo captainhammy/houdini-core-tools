@@ -8,6 +8,9 @@ from collections.abc import Generator, Iterable
 from contextlib import ContextDecorator, contextmanager
 from typing import TYPE_CHECKING
 
+# Houdini Core Tools
+from houdini_core_tools import exceptions
+
 # Houdini
 import hou
 
@@ -112,6 +115,72 @@ class temporarily_unlock_parameters(ContextDecorator):
 
 
 @contextmanager
+def context_container(category: hou.NodeTypeCategory, *, destroy: bool = True) -> Generator[hou.OpNode, None, None]:
+    """Context manager that provides an appropriate node to create a node under.
+
+    If the container type needs to be created it will be, then it will be destroyed after
+    the scope of the manager if `destroy` is True.
+
+    >>> with context_container(hou.sopNodeTypeCategory()) as container:
+    ...     container.createNode("box")
+
+    Args:
+        category: The node type category of the node to create.
+        destroy: Whether to destroy the node or not.
+
+    Returns:
+        An appropriate parent node to create a node of the desired type under.
+
+    Raises:
+        UnsupportedCategoryError: Raised if the category does not correspond to a known/supported type.
+    """
+    category_name = category.name()
+
+    # Types which can map directly to default scene nodes.
+    direct_mappings = {
+        "Driver": hou.node("/out"),
+        "Lop": hou.node("/stage"),
+        "Object": hou.node("/obj"),
+        "Shop": hou.node("/shop"),
+        "Vop": hou.node("/mat"),
+    }
+
+    container = direct_mappings.get(category_name)
+
+    # If there was a direct mapping then use it.
+    if container is not None:
+        yield container
+
+    # Otherwise, check for specific contexts and create the requisite node
+    # of a matching context.
+    else:
+        if category_name == "Cop":
+            container = hou.node("/img").createNode("copnet")
+
+        elif category_name == "Cop2":
+            container = hou.node("/img").createNode("img")
+
+        elif category_name == "Sop":
+            container = hou.node("/obj").createNode("geo")
+
+        elif category_name == "Dop":
+            container = hou.node("/obj").createNode("dopnet")
+
+        elif category_name == "Top":
+            container = hou.node("/obj").createNode("topnet")
+
+        # If a known context cannot be found, raise an error.
+        else:
+            raise exceptions.UnsupportedCategoryError(category)
+
+        yield container
+
+        # Destroy the created container.
+        if destroy:
+            container.destroy()
+
+
+@contextmanager
 def restore_current_selection() -> Generator[None, None, None]:
     """Restore the current selection after the block has exited.
 
@@ -137,6 +206,35 @@ def restore_current_selection() -> Generator[None, None, None]:
         # Restore the selection.
         for item in selected:
             item.setSelected(True)
+
+
+@contextmanager
+def set_current_node(
+    node: hou.Node,
+) -> Generator[None, None, None]:
+    """Temporarily set the current for the scope of the block.
+
+    The current node is that returned by `hou.pwd()`.
+
+    The current mode will be restored in the event an exception occurs inside
+    the block.
+
+    >>> with set_current_node(hou.node("/obj")):
+    ...     # Perform actions where hou.pwd() is used.
+    ...
+
+    Args:
+        node: The temporary node.
+    """
+    current_node = hou.pwd()
+
+    hou.setPwd(node)
+
+    try:
+        yield
+
+    finally:
+        hou.setPwd(current_node)
 
 
 @contextmanager

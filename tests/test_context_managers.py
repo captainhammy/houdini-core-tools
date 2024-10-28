@@ -1,10 +1,13 @@
 """Test the houdini_core_tools.context_managers module."""
 
+# Standard Library
+from contextlib import nullcontext
+
 # Third Party
 import pytest
 
 # Houdini Core Tools
-from houdini_core_tools import context_managers
+from houdini_core_tools import context_managers, exceptions
 
 # Houdini
 import hou
@@ -155,6 +158,55 @@ class Test_temporarily_unlock_parameters:
             parm.set(1)
 
 
+@pytest.mark.parametrize(
+    "category, do_delete, raiser, expected",
+    [
+        (hou.objNodeTypeCategory(), True, nullcontext(), hou.node("/obj")),
+        (
+            hou.objNodeTypeCategory(),
+            False,
+            nullcontext(),
+            hou.node("/obj"),
+        ),  # Won't actually delete because it's not temporary.
+        (hou.ropNodeTypeCategory(), True, nullcontext(), hou.node("/out")),
+        (hou.lopNodeTypeCategory(), True, nullcontext(), hou.node("/stage")),
+        (hou.shopNodeTypeCategory(), True, nullcontext(), hou.node("/shop")),
+        (hou.copNodeTypeCategory(), True, nullcontext(), hou.nodeType("CopNet/copnet")),
+        (hou.cop2NodeTypeCategory(), True, nullcontext(), hou.nodeType("CopNet/img")),
+        (hou.sopNodeTypeCategory(), True, nullcontext(), hou.nodeType("Object/geo")),
+        (
+            hou.sopNodeTypeCategory(),
+            False,
+            nullcontext(),
+            hou.nodeType("Object/geo"),
+        ),  # Won't be deleted due to request.
+        (hou.dopNodeTypeCategory(), True, nullcontext(), hou.nodeType("Object/dopnet")),
+        (hou.topNodeTypeCategory(), True, nullcontext(), hou.nodeType("Object/topnet")),
+        (hou.managerNodeTypeCategory(), True, pytest.raises(exceptions.UnsupportedCategoryError), None),
+    ],
+)
+def test_context_container(category, do_delete, raiser, expected):
+    """Test houdini_core_tools.context_managers.context_container()."""
+    # Keep track if the container is expected to be deleted based on whether
+    # the expected object is a node type (specific temporary container)
+    expect_delete = isinstance(expected, hou.NodeType) and do_delete
+
+    with raiser, context_managers.context_container(category, destroy=do_delete) as container:
+        if isinstance(expected, hou.Node):
+            assert container == expected
+
+        else:
+            assert container.type() == expected
+
+    if expected is not None:
+        # If the container was expected to be deleted, trying to access it will result in
+        # a hou.ObjectWasDeleted exception so use that to confirm it was deleted.
+        persistence_raiser = pytest.raises(hou.ObjectWasDeleted) if expect_delete else nullcontext()
+
+        with persistence_raiser:
+            container.path()
+
+
 def test_restore_current_selection(obj_test_node):
     """Test houdini_core_tools.context_managers.restore_current_selection()."""
     node1 = obj_test_node.node("geo1")
@@ -178,6 +230,16 @@ def test_restore_current_selection(obj_test_node):
         raise RuntimeError("An error occurred.")
 
     assert len(hou.selectedItems()) == 2
+
+
+def test_set_current_node():
+    """Test houdini_core_tools.context_managers.set_current_node()."""
+    assert hou.pwd() == hou.node("/")
+
+    with context_managers.set_current_node(hou.node("/obj")):
+        assert hou.pwd() == hou.node("/obj")
+
+    assert hou.pwd() == hou.node("/")
 
 
 def test_set_temporary_update_mode():
