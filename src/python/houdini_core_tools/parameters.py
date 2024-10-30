@@ -564,9 +564,9 @@ def get_multiparm_template_name(parm: hou.Parm | hou.ParmTuple) -> str | None:  
     parm_template = parm.parmTemplate()
 
     indices = parm.multiParmInstanceIndices()
-    parent_muliparm = parm.parentMultiParm()
+    parent_multiparm = parm.parentMultiParm()
 
-    parent_template = parent_muliparm.parmTemplate()
+    parent_template = parent_multiparm.parmTemplate()
 
     for template in parent_template.parmTemplates():  # pragma: no branch
         resolved_name = resolve_multiparm_tokens(template.name(), indices)
