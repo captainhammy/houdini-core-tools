@@ -16,6 +16,94 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
+# Non-Public Functions
+
+
+def _set_all_shared_values(attribute: hou.Attrib, value: str) -> None:
+    """Set a string attribute value for all elements.
+
+    Args:
+        attribute: The attribute to set.
+        value: The value to set.
+
+    Raises:
+        InvalidAttributeTypeError: If an invalid attribute type ie passed.
+    """
+    geometry = attribute.geometry()
+
+    match attribute.type():
+        case hou.attribType.Point:
+            geometry.setPointStringAttribValues(attribute.name(), [value] * num_points(geometry))
+
+        case hou.attribType.Prim:
+            geometry.setPrimStringAttribValues(attribute.name(), [value] * num_prims(geometry))
+
+        case hou.attribType.Vertex:
+            geometry.setVertexStringAttribValues(attribute.name(), [value] * num_vertices(geometry))
+        case _:
+            raise exceptions.InvalidAttributeTypeError(
+                attribute.type(), (hou.attribType.Point, hou.attribType.Prim, hou.attribType.Vertex)
+            )
+
+
+def _set_group_shared_values(
+    attribute: hou.Attrib, group: hou.PointGroup | hou.PrimGroup | hou.VertexGroup, value: str
+) -> None:
+    """Set a string attribute value for all elements.
+
+    Args:
+        attribute: The attribute to set.
+        group: The group to set
+        value: The value to set.
+
+    Raises:
+        InvalidAttributeTypeError: If an invalid attribute type ie passed.
+    """
+    geometry = attribute.geometry()
+
+    match attribute.type():
+        case hou.attribType.Point:
+            if not isinstance(group, hou.PointGroup):
+                raise exceptions.InvalidGroupTypeError(type(group), hou.PointGroup)
+
+            values = list(geometry.pointStringAttribValues(attribute.name()))
+
+            for point in group.iterPoints():
+                values[point.number()] = value
+
+            geometry.setPointStringAttribValues(attribute.name(), values)
+
+        case hou.attribType.Prim:
+            if not isinstance(group, hou.PrimGroup):
+                raise exceptions.InvalidGroupTypeError(type(group), hou.PrimGroup)
+
+            values = list(geometry.primStringAttribValues(attribute.name()))
+
+            for prim in group.iterPrims():
+                values[prim.number()] = value
+
+            geometry.setPrimStringAttribValues(attribute.name(), values)
+
+        case hou.attribType.Vertex:
+            if not isinstance(group, hou.VertexGroup):
+                raise exceptions.InvalidGroupTypeError(type(group), hou.VertexGroup)
+
+            values = list(geometry.vertexStringAttribValues(attribute.name()))
+
+            for vertex in group.iterVertices():
+                values[vertex.linearNumber()] = value
+
+            geometry.setVertexStringAttribValues(attribute.name(), values)
+
+        case _:
+            raise exceptions.InvalidAttributeTypeError(
+                attribute.type(), (hou.attribType.Point, hou.attribType.Prim, hou.attribType.Vertex)
+            )
+
+
+# Functions
+
+
 def check_minimum_polygon_vertex_count(
     geometry: hou.Geometry, minimum_vertices: int, *, ignore_open: bool = True
 ) -> bool:
@@ -103,19 +191,56 @@ def find_attrib(geometry: hou.Geometry, attrib_type: hou.attribType, name: str) 
     Raises:
         UnexpectedAttributeTypeError: When an invalid attrib_type is passed.
     """
-    if attrib_type == hou.attribType.Vertex:
-        return geometry.findVertexAttrib(name)
+    match attrib_type:
+        case hou.attribType.Vertex:
+            return geometry.findVertexAttrib(name)
 
-    if attrib_type == hou.attribType.Point:
-        return geometry.findPointAttrib(name)
+        case hou.attribType.Point:
+            return geometry.findPointAttrib(name)
 
-    if attrib_type == hou.attribType.Prim:
-        return geometry.findPrimAttrib(name)
+        case hou.attribType.Prim:
+            return geometry.findPrimAttrib(name)
 
-    if attrib_type == hou.attribType.Global:
-        return geometry.findGlobalAttrib(name)
+        case hou.attribType.Global:
+            return geometry.findGlobalAttrib(name)
 
-    raise exceptions.UnexpectedAttributeTypeError(attrib_type)
+        case _:
+            raise exceptions.UnexpectedAttributeTypeError(attrib_type)
+
+
+def find_group(
+    geometry: hou.Geometry,
+    group_type: type[hou.EdgeGroup | hou.PointGroup | hou.PrimGroup | hou.VertexGroup],
+    name: str,
+) -> hou.EdgeGroup | hou.PointGroup | hou.PrimGroup | hou.VertexGroup | None:
+    """Find a group with a given name and type on the geometry.
+
+    Args:
+        geometry: The geometry to find a group on.
+        group_type: The group type.
+        name: The group name.
+
+    Returns:
+        A found group, otherwise None.
+
+    Raises:
+        UnexpectedGroupTypeError: When an invalid group type is passed.
+    """
+    match group_type:
+        case hou.PointGroup:
+            return geometry.findPointGroup(name)
+
+        case hou.PrimGroup:
+            return geometry.findPrimGroup(name)
+
+        case hou.VertexGroup:
+            return geometry.findVertexGroup(name)
+
+        case hou.EdgeGroup:
+            return geometry.findEdgeGroup(name)
+
+        case _:
+            raise exceptions.UnexpectedGroupTypeError(group_type)
 
 
 def geo_details_match(geometry1: hou.Geometry, geometry2: hou.Geometry) -> bool:
@@ -128,7 +253,6 @@ def geo_details_match(geometry1: hou.Geometry, geometry2: hou.Geometry) -> bool:
     Returns:
         Whether the objects represent the same detail.
     """
-    # pylint: disable=protected-access
     handle1 = geometry1._guDetailHandle()
     handle2 = geometry2._guDetailHandle()
 
@@ -276,17 +400,18 @@ def group_bounding_box(group: hou.EdgeGroup | hou.PointGroup | hou.PrimGroup) ->
     Raises:
         TypeError: If the object is not a supported group type.
     """
-    if isinstance(group, hou.EdgeGroup):
-        points = [point for edge in group.edges() for point in edge.points()]
+    match group:
+        case hou.EdgeGroup():
+            points = [point for edge in group.edges() for point in edge.points()]
 
-    elif isinstance(group, hou.PointGroup):
-        points = group.points()
+        case hou.PointGroup():
+            points = group.points()
 
-    elif isinstance(group, hou.PrimGroup):
-        points = [point for prim in group.prims() for point in prim.points()]
+        case hou.PrimGroup():
+            points = [point for prim in group.prims() for point in prim.points()]
 
-    else:
-        raise TypeError(group)
+        case _:
+            raise exceptions.UnexpectedGroupTypeError(type(group))
 
     pos0 = points[0].position()
 
@@ -508,6 +633,32 @@ def reverse_prim(prim: hou.Prim) -> None:
 
     geometry.clear()
     geometry.merge(new_geo)
+
+
+def set_shared_string_attrib(
+    attribute: hou.Attrib, value: str, *, group: hou.PointGroup | hou.PrimGroup | hou.VertexGroup | None = None
+) -> None:
+    """Set a string attribute value for elements.
+
+    If group is None, all elements will receive the value.  If a group
+    is passed, only the elements in the group will be set.
+
+    Args:
+        attribute: The attribute to set.
+        value: The value to set.
+        group: An optional group.
+
+    Raises:
+        AttributeNotAStringError: If the attribute is not a string.
+    """
+    if attribute.dataType() != hou.attribData.String:
+        raise exceptions.AttributeNotAStringError(attribute)
+
+    if group is None:
+        _set_all_shared_values(attribute, value)
+
+    else:
+        _set_group_shared_values(attribute, group, value)
 
 
 def shared_edges(face1: hou.Face, face2: hou.Face) -> tuple[hou.Edge, ...]:

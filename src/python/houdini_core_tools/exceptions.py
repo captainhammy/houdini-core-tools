@@ -4,10 +4,35 @@
 from __future__ import annotations
 
 # Standard Library
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 if TYPE_CHECKING:
     import hou
+
+
+class AttributeNotAStringError(ValueError):
+    """Exception for when an attribute is not a string."""
+
+    def __init__(self, attribute: hou.Attrib) -> None:
+        super().__init__(f"Attribute '{attribute.name()}' must be a string, got {attribute.dataType()}.")
+
+
+class InvalidAttributeTypeError(ValueError):
+    """Exception for when an attribute is not the expected type."""
+
+    def __init__(self, attribute_type: hou.attribType, expected: Sequence[hou.attribType]) -> None:
+        super().__init__(f"Got attribute of type {attribute_type}, expected {', '.join(str(t) for t in expected)}")
+
+
+class InvalidGroupTypeError(ValueError):
+    """Exception for when a group is not the expected type."""
+
+    def __init__(
+        self,
+        group_type: type[hou.PointGroup | hou.PrimGroup | hou.VertexGroup],
+        expected_type: type[hou.PointGroup | hou.PrimGroup | hou.VertexGroup],
+    ) -> None:
+        super().__init__(f"Got a group of type {group_type}, expected {expected_type}")
 
 
 class InvalidMultiParmIndicesError(ValueError):
@@ -89,6 +114,13 @@ class UnexpectedAttributeTypeError(ValueError):
 
     def __init__(self, value: Any) -> None:
         super().__init__(f"Expected a hou.attribType value, got {type(value)}")
+
+
+class UnexpectedGroupTypeError(ValueError):
+    """Exception for passing an invalid group type value."""
+
+    def __init__(self, value: type[Any]) -> None:
+        super().__init__(f"Expected a valid geometry group type, got {value}")
 
 
 class UnsupportedCategoryError(ValueError):

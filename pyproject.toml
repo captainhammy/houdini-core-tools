@@ -111,6 +111,8 @@
         ]
         "tests/*.py" = [
             "FBT003",  # Boolean positional
+            "PLR0913",  # Too many arguments in function definition
+            "PLR0917",  # Too many positional arguments
             "PLR2004",  # Magic value in comparison
             "PLR6301",  # 'no-self-use' for tests
             "PT004",  # Fixtures not returning anything not starting with _

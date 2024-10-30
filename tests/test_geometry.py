@@ -20,6 +20,108 @@ pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 
 
 @pytest.mark.parametrize(
+    "attrib_type,attrib_name,context,expected",
+    (
+        (hou.attribType.Point, "test_point", nullcontext(), tuple(["value"] * 12)),
+        (hou.attribType.Prim, "test", nullcontext(), tuple(["value"] * 5)),
+        (hou.attribType.Vertex, "test_vertex", nullcontext(), tuple(["value"] * 20)),
+        (hou.attribType.Global, "test_detail", pytest.raises(exceptions.InvalidAttributeTypeError), None),
+    ),
+)
+def test__set_all_shared_values(obj_test_geo_copy, attrib_type, attrib_name, context, expected):
+    """Test houdini_core_tools.geometry._set_all_shared_values()."""
+    attrib = houdini_core_tools.geometry.find_attrib(obj_test_geo_copy, attrib_type, attrib_name)
+
+    with context:
+        houdini_core_tools.geometry._set_all_shared_values(
+            attrib,
+            "value",
+        )
+
+        match attrib_type:
+            case hou.attribType.Point:
+                assert obj_test_geo_copy.pointStringAttribValues(attrib_name) == expected
+
+            case hou.attribType.Prim:
+                assert obj_test_geo_copy.primStringAttribValues(attrib_name) == expected
+
+            case hou.attribType.Vertex:
+                assert obj_test_geo_copy.vertexStringAttribValues(attrib_name) == expected
+
+
+@pytest.mark.parametrize(
+    "attrib_type,attrib_name,context,group_type,group_name,expected",
+    (
+        (
+            hou.attribType.Point,
+            "test_point",
+            nullcontext(),
+            hou.PointGroup,
+            "point_group",
+            tuple(["value"] * 5 + [""] * 7),
+        ),
+        (
+            hou.attribType.Point,
+            "test_point",
+            pytest.raises(exceptions.InvalidGroupTypeError),
+            hou.PrimGroup,
+            "prim_group",
+            None,
+        ),
+        (hou.attribType.Prim, "test", nullcontext(), hou.PrimGroup, "prim_group", tuple(["value"] * 3 + [""] * 2)),
+        (
+            hou.attribType.Prim,
+            "test",
+            pytest.raises(exceptions.InvalidGroupTypeError),
+            hou.PointGroup,
+            "point_group",
+            None,
+        ),
+        (
+            hou.attribType.Vertex,
+            "test_vertex",
+            nullcontext(),
+            hou.VertexGroup,
+            "vertex_group",
+            tuple([""] * 10 + ["value"] * 10),
+        ),
+        (
+            hou.attribType.Vertex,
+            "test_vertex",
+            pytest.raises(exceptions.InvalidGroupTypeError),
+            hou.PrimGroup,
+            "prim_group",
+            None,
+        ),
+        (hou.attribType.Global, "test_detail", pytest.raises(exceptions.InvalidAttributeTypeError), None, None, None),
+    ),
+)
+def test__set_group_shared_values(
+    obj_test_geo_copy, attrib_type, attrib_name, context, group_type, group_name, expected
+):
+    """Test houdini_core_tools.geometry._set_group_shared_values()."""
+    attrib = houdini_core_tools.geometry.find_attrib(obj_test_geo_copy, attrib_type, attrib_name)
+    group = houdini_core_tools.geometry.find_group(obj_test_geo_copy, group_type, group_name) if group_name else None
+
+    with context:
+        houdini_core_tools.geometry._set_group_shared_values(
+            attrib,
+            group,
+            "value",
+        )
+
+        match attrib_type:
+            case hou.attribType.Point:
+                assert obj_test_geo_copy.pointStringAttribValues(attrib_name) == expected
+
+            case hou.attribType.Prim:
+                assert obj_test_geo_copy.primStringAttribValues(attrib_name) == expected
+
+            case hou.attribType.Vertex:
+                assert obj_test_geo_copy.vertexStringAttribValues(attrib_name) == expected
+
+
+@pytest.mark.parametrize(
     "min_verts,ignore_open,expected",
     (
         (3, True, True),
@@ -88,6 +190,25 @@ def test_find_attrib(obj_test_geo, attrib_type, name, ctx):
         assert isinstance(result, hou.Attrib)
         assert result.name() == name
         assert result.type() == attrib_type
+
+
+@pytest.mark.parametrize(
+    "group_type,name,ctx",
+    (
+        (hou.VertexGroup, "vertex_group", nullcontext()),
+        (hou.PointGroup, "point_group", nullcontext()),
+        (hou.PrimGroup, "prim_group", nullcontext()),
+        (hou.EdgeGroup, "edge_group", nullcontext()),
+        (hou.Attrib, "bad", pytest.raises(exceptions.UnexpectedGroupTypeError)),
+    ),
+)
+def test_find_group(obj_test_geo, group_type, name, ctx):
+    """Test houdini_core_tools.geometry.find_group()."""
+    with ctx:
+        result = houdini_core_tools.geometry.find_group(obj_test_geo, group_type, name)
+
+        assert isinstance(result, group_type)
+        assert result.name() == name
 
 
 @pytest.mark.parametrize(
@@ -242,8 +363,8 @@ class Test_group_bounding_box:
 
     def test_invalid(self):
         """Test an invalid argument."""
-        with pytest.raises(TypeError):
-            houdini_core_tools.geometry.group_bounding_box(None)
+        with pytest.raises(exceptions.UnexpectedGroupTypeError):
+            houdini_core_tools.geometry.group_bounding_box(hou.Vector3())
 
 
 def test_num_points(obj_test_geo):
@@ -342,6 +463,50 @@ class Test_reverse_prim:
         houdini_core_tools.geometry.reverse_prim(prim)
 
         assert prim.normal() == target
+
+
+@pytest.mark.parametrize(
+    "attrib_name,context,group_name",
+    (
+        (
+            "not_string_point",
+            pytest.raises(exceptions.AttributeNotAStringError),
+            None,
+        ),
+        (
+            "test_point",
+            nullcontext(),
+            None,
+        ),
+        (
+            "test_point",
+            nullcontext(),
+            "point_group",
+        ),
+    ),
+)
+def test_set_shared_string_attrib(mocker, obj_test_geo_copy, attrib_name, context, group_name):
+    """Test houdini_core_tools.geometry.set_shared_string_attrib()."""
+    mock_set_all = mocker.patch("houdini_core_tools.geometry._set_all_shared_values")
+    mock_set_group = mocker.patch("houdini_core_tools.geometry._set_group_shared_values")
+
+    attrib = houdini_core_tools.geometry.find_attrib(obj_test_geo_copy, hou.attribType.Point, attrib_name)
+    group = (
+        houdini_core_tools.geometry.find_group(obj_test_geo_copy, hou.PointGroup, group_name) if group_name else None
+    )
+
+    with context:
+        houdini_core_tools.geometry.set_shared_string_attrib(
+            attrib,
+            "value",
+            group=group,
+        )
+
+        if group is None:
+            mock_set_all.assert_called_with(attrib, "value")
+
+        else:
+            mock_set_group.assert_called_with(attrib, group, "value")
 
 
 def test_shared_edges(obj_test_geo):

@@ -154,24 +154,25 @@ def context_container(category: hou.NodeTypeCategory, *, destroy: bool = True) -
     # Otherwise, check for specific contexts and create the requisite node
     # of a matching context.
     else:
-        if category_name == "Cop":
-            container = hou.node("/img").createNode("copnet")
+        match category_name:
+            case "Cop":
+                container = hou.node("/img").createNode("copnet")
 
-        elif category_name == "Cop2":
-            container = hou.node("/img").createNode("img")
+            case "Cop2":
+                container = hou.node("/img").createNode("img")
 
-        elif category_name == "Sop":
-            container = hou.node("/obj").createNode("geo")
+            case "Sop":
+                container = hou.node("/obj").createNode("geo")
 
-        elif category_name == "Dop":
-            container = hou.node("/obj").createNode("dopnet")
+            case "Dop":
+                container = hou.node("/obj").createNode("dopnet")
 
-        elif category_name == "Top":
-            container = hou.node("/obj").createNode("topnet")
+            case "Top":
+                container = hou.node("/obj").createNode("topnet")
 
-        # If a known context cannot be found, raise an error.
-        else:
-            raise exceptions.UnsupportedCategoryError(category)
+            # If a known context cannot be found, raise an error.
+            case _:
+                raise exceptions.UnsupportedCategoryError(category)
 
         yield container
 
