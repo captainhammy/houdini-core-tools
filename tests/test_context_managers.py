@@ -152,9 +152,10 @@ class Test_temporarily_unlock_parameters:
 
         assert parm.eval() == 3
 
-        with pytest.raises(
-            hou.PermissionError, match=f"Error setting lock status for {parm.path()}"
-        ), context_managers.temporarily_unlock_parameters(parm):
+        with (
+            pytest.raises(hou.PermissionError, match=f"Error setting lock status for {parm.path()}"),
+            context_managers.temporarily_unlock_parameters(parm),
+        ):
             parm.set(1)
 
 
