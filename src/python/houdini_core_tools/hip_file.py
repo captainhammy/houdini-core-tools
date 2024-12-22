@@ -22,7 +22,7 @@ def hip_version() -> str | None:
         The hip file version, if any.
     """
     # Look for "v#".
-    pattern = re.compile("v(\\d*)", re.IGNORECASE)
+    pattern = re.compile(r"v(\d*)", re.IGNORECASE)
 
     # Try to find any matches.
     result = pattern.findall(hou.hipFile.name())

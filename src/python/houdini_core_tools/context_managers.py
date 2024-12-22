@@ -161,11 +161,11 @@ def context_container(category: hou.NodeTypeCategory, *, destroy: bool = True) -
             case "Cop2":
                 container = hou.node("/img").createNode("img")
 
-            case "Sop":
-                container = hou.node("/obj").createNode("geo")
-
             case "Dop":
                 container = hou.node("/obj").createNode("dopnet")
+
+            case "Sop":
+                container = hou.node("/obj").createNode("geo")
 
             case "Top":
                 container = hou.node("/obj").createNode("topnet")

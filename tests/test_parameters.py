@@ -115,7 +115,7 @@ def test_eval_parm_strip_as_string(obj_test_node, parm_name, expected):
     "parm_name,context,expected",
     (
         ("node/color", nullcontext(), hou.Color(0, 0.5, 0.5)),
-        ("node/not_color", pytest.raises(exceptions.ParmTupleTypeError, match=".+ color chooser.+"), None),
+        ("node/not_color", pytest.raises(exceptions.ParmTupleTypeError, match=r".+ color chooser.+"), None),
     ),
 )
 def test_eval_parm_tuple_as_color(obj_test_node, parm_name, context, expected):
@@ -132,7 +132,7 @@ def test_eval_parm_tuple_as_color(obj_test_node, parm_name, context, expected):
         ("node/vec2", nullcontext(), hou.Vector2(1, 2)),
         ("node/vec3", nullcontext(), hou.Vector3(3, 4, 5)),
         ("node/vec4", nullcontext(), hou.Vector4(6, 7, 8, 9)),
-        ("node/not_vec", pytest.raises(exceptions.ParmTupleTypeError, match=".+ vector.+"), None),
+        ("node/not_vec", pytest.raises(exceptions.ParmTupleTypeError, match=r".+ vector.+"), None),
     ),
 )
 def test_eval_parm_tuple_as_vector(obj_test_node, parm_name, context, expected):

@@ -16,7 +16,7 @@ Adding to Houdini
 ``houdini-core-tools`` supports being loaded into Houdini in multiple ways:
 
     - `Houdini Packages <https://www.sidefx.com/docs/houdini/ref/plugins.html>`_
-    - `Rez packages <https://github.com/AcademySoftwareFoundation/rez>`_
+    - `Rez packages <https://rez.readthedocs.io/en/stable/>`_
     - Standard path based setup
 
 ^^^^^^^^^^^^^^^
@@ -24,14 +24,14 @@ Houdini Package
 ^^^^^^^^^^^^^^^
 
 This tool comes with a ``houdini_core_tools.json`` file which can be used to tell Houdini how to load
-the package. Add the containing directory to ``$HOUDINI_PACKAGE_DIR`` to ensure it is loaded.
+the package. Add the containing directory to ``$HOUDINI_PACKAGE_DIR`` or one of the other methods defined
+`here <https://www.sidefx.com/docs/houdini/ref/plugins.html#using_packages>`_
 
 ^^^^^^^^^^^^
 Rez Package
 ^^^^^^^^^^^^
 
-This package supports Rez packaging via a ``package.py`` file in the root directory.  Different versions of
-Houdini are supported via variants.
+This package supports Rez packaging via a ``package.py`` file in the root directory.
 
 ^^^^^^^^^^^^^^^^
 Path Based Setup
