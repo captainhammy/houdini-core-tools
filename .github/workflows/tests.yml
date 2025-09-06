@@ -29,6 +29,11 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-gh-actions coverage
 
+      - name: Build Package
+        uses: captainhammy/build-rez-package-action@v1
+        with:
+          variant_from_request: houdini-${{ matrix.houdini-version }}
+
       - name: Test with tox
         run: tox
 
