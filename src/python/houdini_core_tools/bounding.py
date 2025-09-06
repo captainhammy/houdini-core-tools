@@ -9,16 +9,6 @@ import hou
 # Functions
 
 
-def add_to_bounding_box_min(bbox: hou.BoundingBox, vec: hou.Vector3) -> None:
-    """Add values to the minimum bounds of this bounding box.
-
-    Args:
-        bbox: The bounding box to expand.
-        vec: The values to add.
-    """
-    bbox.setTo(tuple(bbox.minvec() + vec) + tuple(bbox.maxvec()))
-
-
 def add_to_bounding_box_max(bbox: hou.BoundingBox, vec: hou.Vector3) -> None:
     """Add values to the maximum bounds of this bounding box.
 
@@ -27,6 +17,16 @@ def add_to_bounding_box_max(bbox: hou.BoundingBox, vec: hou.Vector3) -> None:
         vec: The values to add.
     """
     bbox.setTo(tuple(bbox.minvec()) + tuple(bbox.maxvec() + vec))
+
+
+def add_to_bounding_box_min(bbox: hou.BoundingBox, vec: hou.Vector3) -> None:
+    """Add values to the minimum bounds of this bounding box.
+
+    Args:
+        bbox: The bounding box to expand.
+        vec: The values to add.
+    """
+    bbox.setTo(tuple(bbox.minvec() + vec) + tuple(bbox.maxvec()))
 
 
 def bounding_box_area(bbox: hou.BoundingBox) -> float:

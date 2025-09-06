@@ -15,9 +15,11 @@ external dependencies.
    :caption: Contents:
 
    installation.rst
+   bounding.rst
    context_managers.rst
    hip_file.rst
    menus.rst
    nodegraph.rst
+   nodes.rst
    parameters.rst
    api/modules
