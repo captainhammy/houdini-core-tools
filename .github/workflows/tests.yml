@@ -32,12 +32,6 @@ jobs:
       - name: Test with tox
         run: tox
 
-      - name: Test Houdini package json
-        env:
-          HOUDINI_PACKAGE_DIR: ${GITHUB_WORKSPACE}/houdini-core-tools
-        run: |
-          hython -m pytest tests/
-
       # Build package for rez testing
       - name: Build Package
         uses: captainhammy/build-rez-package-action@v1
@@ -45,6 +39,13 @@ jobs:
       # Test rez package
       - name: Test Current Rez Package
         uses: captainhammy/test-rez-package-action@v1
+
+      - name: Test Houdini package json
+        env:
+          HOUDINI_PACKAGE_DIR: ${GITHUB_WORKSPACE}/houdini-core-tools
+        run: |
+          python3 -m pip install pytest pytest-cov pytest-datadir pytest-houdini pytest-mock 
+          hython -m pytest tests/
 
       - name: Workaround for codecov/feedback#263
         run: |
