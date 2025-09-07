@@ -29,24 +29,23 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-gh-actions coverage
 
-#      - name: Test with tox
-#        run: tox
-#
-#      # Build package for rez testing
-#      - name: Build Package
-#        uses: captainhammy/build-rez-package-action@v1
-#
-#      # Test rez package
-#      - name: Test Current Rez Package
-#        uses: captainhammy/test-rez-package-action@v1
+      - name: Test with tox
+        run: tox
+
+      # Build package for rez testing
+      - name: Build Package
+        uses: captainhammy/build-rez-package-action@v1
+
+      # Test rez package
+      - name: Test Current Rez Package
+        uses: captainhammy/test-rez-package-action@v1
 
       - name: Test Houdini package json
         env:
           HOUDINI_PACKAGE_DIR: ${{ github.workspace }}
         run: |
-          echo $HOUDINI_PACKAGE_DIR
           hython -m pip install -r requirements.txt
-          hython -m pip install pytest pytest-cov pytest-datadir pytest-houdini pytest-mock 
+          hython -m pip install -r test_requirements.txt
           hython -m pytest tests/
 
       - name: Workaround for codecov/feedback#263
