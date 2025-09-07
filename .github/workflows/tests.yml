@@ -29,15 +29,26 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-gh-actions coverage
 
-      - name: Workaround for codecov/feedback#263
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Test with tox
+        run: tox
 
+      - name: Test Houdini package json
+        env:
+          HOUDINI_PACKAGE_DIR: ${GITHUB_WORKSPACE}/houdini-core-tools
+        run: |
+          hython -m pytest tests/
+
+      # Build package for rez testing
       - name: Build Package
         uses: captainhammy/build-rez-package-action@v1
 
-      - name: Test with tox
-        run: tox
+      # Test rez package
+      - name: Test Current Rez Package
+        uses: captainhammy/test-rez-package-action@v1
+
+      - name: Workaround for codecov/feedback#263
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
