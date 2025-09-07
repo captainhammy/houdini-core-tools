@@ -44,7 +44,7 @@ jobs:
         env:
           HOUDINI_PACKAGE_DIR: ${GITHUB_WORKSPACE}/houdini-core-tools
         run: |
-          python3 -m pip install pytest pytest-cov pytest-datadir pytest-houdini pytest-mock 
+          hython -m pip install pytest pytest-cov pytest-datadir pytest-houdini pytest-mock 
           hython -m pytest tests/
 
       - name: Workaround for codecov/feedback#263
