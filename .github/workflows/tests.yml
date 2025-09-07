@@ -45,7 +45,7 @@ jobs:
           HOUDINI_PACKAGE_DIR: ${{ github.workspace }}
         run: |
           echo $HOUDINI_PACKAGE_DIR
-          python3 -m pip install -r requirements.txt
+          hython -m pip install -r requirements.txt
           hython -m pip install pytest pytest-cov pytest-datadir pytest-houdini pytest-mock 
           hython -m pytest tests/
 
