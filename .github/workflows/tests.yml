@@ -16,6 +16,9 @@ jobs:
       image: captainhammy/hython-runner:${{ matrix.houdini-version }}
 
     steps:
+      - name: Mark workspace as safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -40,17 +43,13 @@ jobs:
       - name: Test Current Rez Package
         uses: captainhammy/test-rez-package-action@v1
 
+      # Test the package using the Houdini package .json file to ensure it works
       - name: Test Houdini package json
         env:
           HOUDINI_PACKAGE_DIR: ${{ github.workspace }}
         run: |
-          hython -m pip install -r requirements.txt
-          hython -m pip install -r test_requirements.txt
+          hython -m pip install -r requirements.txt -r test_requirements.txt
           hython -m pytest tests/
-
-      - name: Workaround for codecov/feedback#263
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
