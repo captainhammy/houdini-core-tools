@@ -42,7 +42,7 @@ jobs:
 
       - name: Test Houdini package json
         env:
-          HOUDINI_PACKAGE_DIR: "$GITHUB_WORKSPACE"/houdini-core-tools
+          HOUDINI_PACKAGE_DIR: "$GITHUB_WORKSPACE/houdini-core-tools"
         run: |
           echo $HOUDINI_PACKAGE_DIR
           hython -m pip install pytest pytest-cov pytest-datadir pytest-houdini pytest-mock 
