@@ -32,6 +32,7 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-gh-actions coverage
 
+      # Run tox tests (unit tests + static code analysis)
       - name: Test with tox
         run: tox
 
@@ -46,7 +47,11 @@ jobs:
       # Test the package using the Houdini package .json file to ensure it works
       - name: Test Houdini package json
         env:
+          # Set the package search path to the workspace so Houdini will pick up the .json
           HOUDINI_PACKAGE_DIR: ${{ github.workspace }}
+        # Need to use Hython to pip install since commands are run by the root user and
+        # the libs will otherwise be installed in the system location where Houdini
+        # won't load things from.
         run: |
           hython -m pip install -r requirements.txt -r test_requirements.txt
           hython -m pytest tests/
