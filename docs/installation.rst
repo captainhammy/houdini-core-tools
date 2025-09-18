@@ -46,5 +46,4 @@ In order to manually setup the tooling you'll need to do the following:
 Requirements
 ------------
 
-Package requirements are listed in ``requirements.txt``, as well as defined in the Rez ``package.py``. Please ensure
-they are installed prior to launching Houdini.
+This package is designed to require no external dependencies, other than Houdini itself.

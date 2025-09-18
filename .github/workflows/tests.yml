@@ -29,7 +29,7 @@ jobs:
           client_id: ${{ secrets.SESI_CLIENT_ID }}
           client_secret_key: ${{ secrets.SESI_SECRET_KEY }}
 
-      - name: Install dependencies
+      - name: Install execution dependencies
         run: python3 -m pip install tox tox-gh-actions coverage
 
       # Run tox tests (unit tests + static code analysis)
@@ -53,7 +53,7 @@ jobs:
         # the libs will otherwise be installed in the system location where Houdini
         # won't load things from.
         run: |
-          hython -m pip install -r requirements.txt -r test_requirements.txt
+          hython -m pip install -r test_requirements.txt
           hython -m pytest tests/
 
       - name: Upload coverage reports to Codecov

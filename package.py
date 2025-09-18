@@ -29,7 +29,6 @@ authors = ["graham thompson"]
 
 requires = [
     "houdini-20.5+<21.5",
-    "python_singleton",
 ]
 
 build_system = "cmake"
