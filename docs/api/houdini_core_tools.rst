@@ -44,6 +44,14 @@ houdini\_core\_tools.geometry module
    :undoc-members:
    :show-inheritance:
 
+houdini\_core\_tools.hdas module
+--------------------------------------
+
+.. automodule:: houdini_core_tools.hdas
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 houdini\_core\_tools.hip\_file module
 -------------------------------------
 

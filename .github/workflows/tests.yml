@@ -10,12 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        houdini-version: ["20.5"]
+        houdini-version: ["20.5", "21.0"]
 
     container:
       image: captainhammy/hython-runner:${{ matrix.houdini-version }}
 
     steps:
+      - name: Mark workspace as safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -26,15 +29,32 @@ jobs:
           client_id: ${{ secrets.SESI_CLIENT_ID }}
           client_secret_key: ${{ secrets.SESI_SECRET_KEY }}
 
-      - name: Install dependencies
+      - name: Install execution dependencies
         run: python3 -m pip install tox tox-gh-actions coverage
 
+      # Run tox tests (unit tests + static code analysis)
       - name: Test with tox
         run: tox
 
-      - name: Workaround for codecov/feedback#263
+      # Build package for rez testing
+      - name: Build Package
+        uses: captainhammy/build-rez-package-action@v1
+
+      # Test rez package
+      - name: Test Current Rez Package
+        uses: captainhammy/test-rez-package-action@v1
+
+      # Test the package using the Houdini package .json file to ensure it works
+      - name: Test Houdini package json
+        env:
+          # Set the package search path to the workspace so Houdini will pick up the .json
+          HOUDINI_PACKAGE_DIR: ${{ github.workspace }}
+        # Need to use Hython to pip install since commands are run by the root user and
+        # the libs will otherwise be installed in the system location where Houdini
+        # won't load things from.
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          hython -m pip install -r test_requirements.txt
+          hython -m pytest tests/
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4

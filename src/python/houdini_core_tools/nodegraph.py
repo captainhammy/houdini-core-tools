@@ -6,10 +6,7 @@ from __future__ import annotations
 # Standard Library
 import enum
 import functools
-from typing import TYPE_CHECKING
-
-# Third Party
-from singleton import Singleton
+from typing import TYPE_CHECKING, ClassVar
 
 # Houdini
 import nodegraphtitle
@@ -30,7 +27,19 @@ class NodeGraphTitleLocation(enum.Enum):
 # Classes
 
 
-class NodeGraphTitleManager(metaclass=Singleton):
+class _Singleton(type):
+    """Singleton implementation as a metaclass."""
+
+    _instances: ClassVar[dict] = {}
+
+    def __call__(cls, *args, **kwargs):  # type: ignore
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+
+        return cls._instances[cls]
+
+
+class NodeGraphTitleManager(metaclass=_Singleton):
     """Manager for setting node graph titles."""
 
     def __init__(self) -> None:

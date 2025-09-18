@@ -9,7 +9,7 @@ description = "Houdini Core Tools"
 def version() -> str:
     """Get the package version.
 
-    Because this project is not versioned we'll just use the short git hash as the version.
+    Because this project is not versioned, we'll just use the short git hash as the version.
 
     Returns:
         The package version.
@@ -28,8 +28,7 @@ def version() -> str:
 authors = ["graham thompson"]
 
 requires = [
-    "houdini-20.5+",
-    "python_singleton",
+    "houdini-20.5+<21.5",
 ]
 
 build_system = "cmake"
@@ -37,7 +36,7 @@ build_system = "cmake"
 tests = {
     "unit": {
         "command": "hython -m pytest tests",
-        "requires": ["pytest", "pytest_cov", "pytest_houdini", "pytest_mock"],
+        "requires": ["pytest", "pytest_cov", "pytest_datadir", "pytest_houdini", "pytest_mock"],
     }
 }
 

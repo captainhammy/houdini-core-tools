@@ -57,5 +57,6 @@ dist
 *egg-info*
 
 **/backup/*.hip*
+**/backup/*.otl*
 
 TODO

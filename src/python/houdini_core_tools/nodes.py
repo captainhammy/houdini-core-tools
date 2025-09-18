@@ -43,6 +43,37 @@ def disconnect_all_outputs(node: hou.Node) -> None:
             connection.outputNode().setInput(connection.inputIndex(), None)
 
 
+def get_containing_node(node: hou.Node) -> hou.Node | None:
+    """Returns the nearest parent node which is of a different node type category.
+
+    Args:
+        node: The node to find the containing node of.
+
+    Returns:
+        The containing node.
+    """
+    parent = node.parent()
+
+    while parent is not None:
+        parent_type = parent.type()
+        parent_category = parent_type.category()
+
+        # If the parent node is the root node, /, then an exception
+        # will be thrown so we need to account for it.
+        try:
+            parent_child_type = parent_type.childTypeCategory()
+
+        except hou.OperationFailed:
+            parent_child_type = None
+
+        if parent_category != parent_child_type:
+            return parent
+
+        parent = parent.parent()
+
+    return None
+
+
 def get_node_author(node: hou.OpNode) -> str:
     """Get the name of the node creator.
 
@@ -52,99 +83,7 @@ def get_node_author(node: hou.OpNode) -> str:
     Returns:
         The author name.
     """
-    return hou.hscript(f"opls -l {node.path()}")[0].strip().split()[-2]
-
-
-def get_node_message_nodes(node: hou.OpNode) -> tuple[hou.OpNode, ...]:
-    """Get a list of the node's message nodes.
-
-    Args:
-        node: The node to get the message nodes for.
-
-    Returns:
-        A tuple of message nodes.
-    """
-    # Get the otl definition for this node's type, if any.
-    definition = node.type().definition()
-
-    # Check that there are message nodes.
-    if definition is not None and "MessageNodes" in definition.sections():
-        # Extract the list of them.
-        contents = definition.sections()["MessageNodes"].contents()
-
-        # Glob for any specified nodes and return them.
-        return node.glob(contents)
-
-    return ()
-
-
-def get_node_editable_nodes(node: hou.OpNode) -> tuple[hou.OpNode, ...]:
-    """Get a list of the node's editable nodes.
-
-    Args:
-        node: The node to get the editable nodes for.
-
-    Returns:
-        A tuple of editable nodes.
-    """
-    # Get the otl definition for this node's type, if any.
-    definition = node.type().definition()
-
-    # Check that there are editable nodes.
-    if definition is not None and "EditableNodes" in definition.sections():
-        # Extract the list of them.
-        contents = definition.sections()["EditableNodes"].contents()
-
-        # Glob for any specified nodes and return them.
-        return node.glob(contents)
-
-    return ()
-
-
-def get_node_dive_target(node: hou.OpNode) -> hou.OpNode | None:
-    """Get this node's dive target node.
-
-    Args:
-        node: The node to get the dive target of.
-
-    Returns:
-        The node's dive target.
-    """
-    # Get the otl definition for this node's type, if any.
-    definition = node.type().definition()
-
-    # Check that there is a dive target.
-    if definition is not None and "DiveTarget" in definition.sections():
-        # Get its path.
-        target = definition.sections()["DiveTarget"].contents()
-
-        # Return the node.
-        return node.node(target)
-
-    return None
-
-
-def get_node_representative_node(node: hou.OpNode) -> hou.OpNode | None:
-    """Get the representative node of this node, if any.
-
-    Args:
-        node: The node to get the representative node for.
-
-    Returns:
-        The node's representative node.
-    """
-    # Get the otl definition for this node's type, if any.
-    definition = node.type().definition()
-
-    if definition is not None:
-        # Get the path to the representative node, if any.
-        path = definition.representativeNodePath()
-
-        if path:
-            # Return the node.
-            return node.node(path)
-
-    return None
+    return hou.hscript(f"opls -d -l {node.path()}")[0].strip().split()[-2]
 
 
 def get_nodes_from_paths(paths: Sequence[str]) -> tuple[hou.Node, ...]:
@@ -180,20 +119,6 @@ def get_node_type_tool(node_or_node_type: hou.Node | hou.NodeType) -> hou.Tool |
     tool_name = f"{node_or_node_type.category().name().lower()}_{node_or_node_type.name()}"
 
     return tools.get(tool_name)
-
-
-def is_node_digital_asset(node: hou.OpNode) -> bool:
-    """Determine if this node is a digital asset.
-
-    A node is a digital asset if its node type has a hou.HDADefinition.
-
-    Args:
-        node: The node to check for being a digital asset.
-
-    Returns:
-        Whether this node is a digital asset.
-    """
-    return node.type().definition() is not None
 
 
 def node_is_contained_by(node: hou.Node, containing_node: hou.Node) -> bool:

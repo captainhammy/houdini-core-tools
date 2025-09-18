@@ -22,6 +22,10 @@ class TestNodeGraphTitleManager:
         assert inst._original_left == nodegraphtitle.networkEditorTitleLeft
         assert inst._original_right == nodegraphtitle.networkEditorTitleRight
 
+        # Test that the class is a singleton.
+        inst2 = nodegraph.NodeGraphTitleManager()
+        assert inst is inst2
+
     @pytest.mark.parametrize("has_existing_title", [False, True])
     def test__set_title(self, mocker, has_existing_title):
         """Test NodeGraphTitleManager._set_title()."""

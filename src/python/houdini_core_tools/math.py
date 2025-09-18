@@ -148,7 +148,7 @@ def matrix_set_translates(matrix: hou.Matrix4, translates: tuple[float, float, f
         translates: The translation values to set.
     """
     # The translations are stored in the first 3 columns of the last row of the
-    # matrix.  To set the values we just need to set the corresponding columns
+    # matrix. To set the values we just need to set the corresponding columns
     # to the matching components in the vector.
     for i in range(3):
         matrix.setAt(3, i, translates[i])

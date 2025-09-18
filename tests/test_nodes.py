@@ -15,6 +15,27 @@ pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 # Tests
 
 
+@pytest.mark.parametrize(
+    "name,expected_path",
+    (
+        ("/", None),
+        ("/obj", "/"),
+        ("geo_container/box", "geo_container"),
+        ("geo_container/inner/sphere", "geo_container"),
+        ("lopnet/subnet/file", "lopnet"),
+        ("chopnet/lopnet/subnet/file", "chopnet/lopnet"),
+    ),
+)
+def test_get_containing_node(obj_test_node, name, expected_path):
+    """Test houdini_core_tools.nodes.get_containing_node()."""
+    node = obj_test_node.node(name)
+
+    expected = obj_test_node.node(expected_path) if expected_path else None
+
+    result = houdini_core_tools.nodes.get_containing_node(node)
+    assert result == expected
+
+
 def test_disconnect_all_inputs(obj_test_node):
     """Test houdini_core_tools.nodes.disconnect_all_outputs()."""
     node = obj_test_node.node("merge")
@@ -22,11 +43,6 @@ def test_disconnect_all_inputs(obj_test_node):
     houdini_core_tools.nodes.disconnect_all_inputs(node)
 
     assert not node.inputs()
-
-
-def test_get_node_author(obj_test_node):
-    """Test houdini_core_tools.nodes.get_node_author()."""
-    assert houdini_core_tools.nodes.get_node_author(obj_test_node) == "grahamt"
 
 
 def test_disconnect_all_outputs(obj_test_node):
@@ -38,73 +54,9 @@ def test_disconnect_all_outputs(obj_test_node):
     assert not node.outputs()
 
 
-@pytest.mark.parametrize(
-    "node_name,expected_node",
-    (
-        ("valid", "d/s"),
-        ("no_message_nodes", None),
-        ("not_otl", None),
-    ),
-)
-def test_get_node_dive_target(obj_test_node, node_name, expected_node):
-    """Test houdini_core_tools.nodes.get_node_dive_target()."""
-    node = obj_test_node.node(node_name)
-
-    target = node.node(expected_node) if expected_node is not None else None
-
-    assert houdini_core_tools.nodes.get_node_dive_target(node) == target
-
-
-@pytest.mark.parametrize(
-    "node_name,expected_node",
-    (
-        ("valid", "d/s"),
-        ("no_message_nodes", None),
-        ("not_otl", None),
-    ),
-)
-def test_get_node_editable_nodes(obj_test_node, node_name, expected_node):
-    """Test houdini_core_tools.nodes.get_node_editable_nodes()."""
-    node = obj_test_node.node(node_name)
-
-    target = (node.node(expected_node),) if expected_node is not None else ()
-
-    assert houdini_core_tools.nodes.get_node_editable_nodes(node) == target
-
-
-@pytest.mark.parametrize(
-    "node_name,expected_node",
-    (
-        ("valid", "d/s"),
-        ("no_message_nodes", None),
-        ("not_otl", None),
-    ),
-)
-def test_get_node_message_nodes(obj_test_node, node_name, expected_node):
-    """Test houdini_core_tools.nodes.get_node_message_nodes()."""
-    node = obj_test_node.node(node_name)
-
-    target = (node.node(expected_node),) if expected_node is not None else ()
-
-    assert houdini_core_tools.nodes.get_node_message_nodes(node) == target
-
-
-@pytest.mark.parametrize(
-    "node_name,expected_node",
-    (
-        ("stereo", "stereo_camera"),
-        ("stereo/left_camera", None),
-        ("stereo/visualization_root", None),
-        ("geo/solver", None),
-    ),
-)
-def test_get_node_representative_node(obj_test_node, node_name, expected_node):
-    """Test houdini_core_tools.nodes.get_node_representative_node()."""
-    node = obj_test_node.node(node_name)
-
-    target = node.node(expected_node) if expected_node is not None else None
-
-    assert houdini_core_tools.nodes.get_node_representative_node(node) == target
+def test_get_node_author(obj_test_node):
+    """Test houdini_core_tools.nodes.get_node_author()."""
+    assert houdini_core_tools.nodes.get_node_author(obj_test_node) == "grahamt"
 
 
 @pytest.mark.parametrize("pass_type", (False, True))
@@ -145,20 +97,6 @@ def test_node_is_contained_by(obj_test_node):
 
     assert houdini_core_tools.nodes.node_is_contained_by(box, obj_test_node)
     assert not houdini_core_tools.nodes.node_is_contained_by(obj_test_node, hou.node("/shop"))
-
-
-@pytest.mark.parametrize(
-    "node_name,expected",
-    (
-        ("is_digital_asset", True),
-        ("not_digital_asset", False),
-    ),
-)
-def test_is_node_digital_asset(obj_test_node, node_name, expected):
-    """Test houdini_core_tools.nodes.is_node_digital_asset()."""
-    node = obj_test_node.node(node_name)
-
-    assert houdini_core_tools.nodes.is_node_digital_asset(node) == expected
 
 
 def test_read_from_user_data(obj_test_node):

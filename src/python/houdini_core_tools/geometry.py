@@ -49,7 +49,7 @@ def _set_all_shared_values(attribute: hou.Attrib, value: str) -> None:
 def _set_group_shared_values(
     attribute: hou.Attrib, group: hou.PointGroup | hou.PrimGroup | hou.VertexGroup, value: str
 ) -> None:
-    """Set a string attribute value for all elements.
+    """Set a string attribute value for group elements.
 
     Args:
         attribute: The attribute to set.
