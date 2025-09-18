@@ -11,15 +11,18 @@ external dependencies.
 
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
+    :caption: Contents:
 
-   installation.rst
-   bounding.rst
-   context_managers.rst
-   hip_file.rst
-   menus.rst
-   nodegraph.rst
-   nodes.rst
-   parameters.rst
-   api/modules
+    installation.rst
+    bounding.rst
+    context_managers.rst
+    geometry.rst
+    hdas.rst
+    hip_file.rst
+    math.rst
+    nodegraph.rst
+    nodes.rst
+    parameters.rst
+    menus.rst
+    api/modules
