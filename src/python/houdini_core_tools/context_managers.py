@@ -96,7 +96,7 @@ class temporarily_unlock_parameters(ContextDecorator):
         Args:
             locked: Whether the parms should be locked.
         """
-        for parm, parm_is_locked in zip(self.parms, self.locked_states):
+        for parm, parm_is_locked in zip(self.parms, self.locked_states, strict=True):
             if parm_is_locked:
                 try:
                     parm.lock(locked)

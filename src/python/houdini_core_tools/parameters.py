@@ -172,7 +172,7 @@ def eval_multiparm_instance(
         offsets = get_multiparm_container_offsets(name, ptg)
 
         # Adjust any supplied offsets with the multiparm offset.
-        indices = [idx + offset for idx, offset in zip(indices, offsets)]
+        indices = [idx + offset for idx, offset in zip(indices, offsets, strict=True)]
 
     # Validate that enough indices were passed.
     _validate_multiparm_resolve_values(name, indices)
@@ -722,7 +722,7 @@ def unexpanded_string_multiparm_instance(
         offsets = get_multiparm_container_offsets(name, ptg)
 
         # Adjust any supplied offsets with the multiparm offset.
-        indices = [idx + offset for idx, offset in zip(indices, offsets)]
+        indices = [idx + offset for idx, offset in zip(indices, offsets, strict=True)]
 
     # Validate that enough indices were passed.
     _validate_multiparm_resolve_values(name, indices)
