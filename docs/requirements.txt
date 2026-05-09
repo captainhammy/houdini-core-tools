@@ -1,4 +1,0 @@
-sphinx
-sphinx-rtd-theme
-sphinx-copybutton
-enum-tools[sphinx]

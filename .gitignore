@@ -45,6 +45,7 @@ Thumbs.db
 .coverage
 .coverage.*
 .idea
+.vscode
 htmlcov
 coverage_html_report
 coverage.xml
@@ -60,3 +61,4 @@ dist
 **/backup/*.otl*
 
 TODO
+houdini-core-tools.code-workspace
