@@ -32,7 +32,7 @@ jobs:
       - name: Install execution dependencies
         run: python3 -m pip install --group "github"
 
-      # Run tox tests (unit tests + static code analysis)
+      # Run static analysis tox tests
       - name: Test with tox
         run: tox -m static
 

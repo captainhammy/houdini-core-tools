@@ -2,12 +2,7 @@
 name = "houdini_core_tools"
 
 [dependency-groups]
-    docs = [
-        "sphinx==8",
-        "sphinx-rtd-theme",
-        "sphinx-copybutton",
-        "enum-tools[sphinx]",
-    ]
+    docs = ["sphinx==8", "sphinx-rtd-theme", "sphinx-copybutton", "enum-tools[sphinx]"]
     docstrings = ["pydocstringformatter"]
     github = ["coverage", "tox"]
     isort = ["isort"]
@@ -20,11 +15,6 @@ name = "houdini_core_tools"
     labels = {test = ["run-tests-rez", "run-tests-json"], static = ["ruff-check", "ruff-format-check", "isort-check", "mypy", "docstring-check"], fix = ["ruff-format-fix", "isort-run", "docstring-run"] }
     no_package = true
 
-#    [tool.tox.gh-actions]
-#        python = """
-#            3.13: run-tests,ruff-check,ruff-format-check,isort-check,mypy,docstring-check
-#        """
-
     [tool.tox.env.run-tests-rez]
         allowlist_externals = ["echo", "rez"]
         commands = [["rez", "test", "{[project]name}"]]
@@ -33,7 +23,7 @@ name = "houdini_core_tools"
     [tool.tox.env.run-tests-json]
         allowlist_externals = ["echo", "hython"]
         dependency_groups = ["test"]
-        set_env = {PYTHONPATH = "{toxinidir}/src/python:{envsitepackagesdir}"}
+        set_env = {PYTHONPATH = "{envsitepackagesdir}", HOUDINI_PACKAGE_DIR = "{toxinidir}"}
         commands = [["hython", "-m", "pytest", "tests/"]]
         commands_post = [["echo", "View test coverage report at file://{toxinidir}/coverage_html_report/index.html"]]
 
@@ -78,9 +68,8 @@ name = "houdini_core_tools"
         ]
         commands_post = [["echo", "Docs available at file://{envtmpdir}/html/index.html"]]
 
-[tool.pytest.ini_options]
-    pythonpath = "src"
-    addopts = "--cov --cov-report=html --cov-report=xml --cov-fail-under=100 --color=yes"
+[tool.pytest]
+    addopts = ["--cov", "--cov-report=html", "--cov-report=xml", "--cov-fail-under=100", "--color=yes"]
 
 [tool.isort]
     profile = "black"
@@ -108,9 +97,8 @@ name = "houdini_core_tools"
         ignore_missing_imports = true
 
 [tool.coverage]
-    [tool.coverage.run]
-        branch = true
-        source =  ["houdini_core_tools"]
+    [tool.coverage.html]
+        directory = "coverage_html_report"
 
     [tool.coverage.report]
         exclude_lines = [
@@ -122,8 +110,9 @@ name = "houdini_core_tools"
         ignore_errors = true
         skip_empty = true
 
-    [tool.coverage.html]
-        directory = "coverage_html_report"
+    [tool.coverage.run]
+        branch = true
+        source =  ["houdini_core_tools"]
 
 [tool.pydocstringformatter]
     max-summary-lines = 2
