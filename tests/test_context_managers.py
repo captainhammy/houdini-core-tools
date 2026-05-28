@@ -160,52 +160,42 @@ class Test_temporarily_unlock_parameters:
 
 
 @pytest.mark.parametrize(
-    "category, do_delete, raiser, expected",
+    "category_name, destroy, raiser, expected",
     [
-        (hou.objNodeTypeCategory(), True, nullcontext(), hou.node("/obj")),
-        (
-            hou.objNodeTypeCategory(),
-            False,
-            nullcontext(),
-            hou.node("/obj"),
-        ),  # Won't actually delete because it's not temporary.
-        (hou.ropNodeTypeCategory(), True, nullcontext(), hou.node("/out")),
-        (hou.lopNodeTypeCategory(), True, nullcontext(), hou.node("/stage")),
-        (hou.shopNodeTypeCategory(), True, nullcontext(), hou.node("/shop")),
-        (hou.copNodeTypeCategory(), True, nullcontext(), hou.nodeType("CopNet/copnet")),
-        (hou.cop2NodeTypeCategory(), True, nullcontext(), hou.nodeType("CopNet/img")),
-        (hou.sopNodeTypeCategory(), True, nullcontext(), hou.nodeType("Object/geo")),
-        (
-            hou.sopNodeTypeCategory(),
-            False,
-            nullcontext(),
-            hou.nodeType("Object/geo"),
-        ),  # Won't be deleted due to request.
-        (hou.dopNodeTypeCategory(), True, nullcontext(), hou.nodeType("Object/dopnet")),
-        (hou.topNodeTypeCategory(), True, nullcontext(), hou.nodeType("Object/topnet")),
-        (hou.managerNodeTypeCategory(), True, pytest.raises(exceptions.UnsupportedCategoryError), None),
+        ("Object", False, None, hou.nodeType("Object/subnet")),
+        ("Driver", True, None, hou.nodeType("Driver/subnet")),
+        ("Lop", False, None, hou.nodeType("Lop/subnet")),
+        ("Shop", True, None, hou.nodeType("Shop/material")),
+        ("Vop", False, None, hou.nodeType("Vop/subnet")),
+        ("Cop2", True, None, hou.nodeType("CopNet/img")),
+        ("Cop", False, None, hou.nodeType("CopNet/copnet")),
+        ("Sop", True, None, hou.nodeType("Object/geo")),
+        ("Dop", False, None, hou.nodeType("Object/dopnet")),
+        ("Top", True, None, hou.nodeType("Object/topnet")),
+        ("Manager", False, pytest.raises(exceptions.UnsupportedCategoryError), None),
     ],
 )
-def test_context_container(category, do_delete, raiser, expected):
+def test_context_container(category_name, destroy, raiser, expected):
     """Test houdini_core_tools.context_managers.context_container()."""
-    # Keep track if the container is expected to be deleted based on whether
-    # the expected object is a node type (specific temporary container)
-    expect_delete = isinstance(expected, hou.NodeType) and do_delete
+    category = hou.nodeTypeCategories().get(category_name)
 
-    with raiser, context_managers.context_container(category, destroy=do_delete) as container:
-        if isinstance(expected, hou.Node):
-            assert container == expected
+    if category is None:
+        pytest.skip(f"Category {category_name} not available in {hou.applicationVersionString()}")
 
-        else:
-            assert container.type() == expected
+    if raiser is None:
+        raiser = nullcontext()
+
+    with raiser, context_managers.context_container(category, destroy=destroy) as container:
+        assert container.type() == expected
 
     if expected is not None:
         # If the container was expected to be deleted, trying to access it will result in
         # a hou.ObjectWasDeleted exception so use that to confirm it was deleted.
-        persistence_raiser = pytest.raises(hou.ObjectWasDeleted) if expect_delete else nullcontext()
+        persistence_raiser = pytest.raises(hou.ObjectWasDeleted) if destroy else nullcontext()
 
         with persistence_raiser:
-            container.path()
+            assert container.path()
+
 
 
 def test_restore_current_selection(obj_test_node):

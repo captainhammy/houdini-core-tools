@@ -17,6 +17,26 @@ import hou
 if TYPE_CHECKING:
     from types import TracebackType
 
+# Globals
+
+# Known types that can be created with their parent/node type.
+_CREATABLE_CATEGORY_MAPPINGS = {
+    "Cop2": ("/img", "img"),
+    "Cop": ("/img", "copnet"),
+    "Sop": ("/obj", "geo"),
+    "Dop": ("/obj", "dopnet"),
+    "Top": ("/obj", "topnet"),
+}
+
+# Types which can map directly to default scene nodes.
+_DIRECT_CATEGORY_MAPPINGS = {
+    "Driver": hou.node("/out"),
+    "Lop": hou.node("/stage"),
+    "Object": hou.node("/obj"),
+    "Shop": hou.node("/shop"),
+    "Vop": hou.node("/mat"),
+}
+
 
 # Classes
 
@@ -136,46 +156,29 @@ def context_container(category: hou.NodeTypeCategory, *, destroy: bool = True) -
     """
     category_name = category.name()
 
-    # Types which can map directly to default scene nodes.
-    direct_mappings = {
-        "Driver": hou.node("/out"),
-        "Lop": hou.node("/stage"),
-        "Object": hou.node("/obj"),
-        "Shop": hou.node("/shop"),
-        "Vop": hou.node("/mat"),
-    }
+    category_name = category.name()
 
-    container = direct_mappings.get(category_name)
+    container = _DIRECT_CATEGORY_MAPPINGS.get(category_name)
 
     # If there was a direct mapping then use it.
     if container is not None:
-        yield container
+        container = container.createNode("subnet")
 
-    # Otherwise, check for specific contexts and create the requisite node
-    # of a matching context.
+        # Otherwise, check for specific contexts and create the requisite node
+        # of a matching context.
     else:
-        match category_name:
-            case "Cop":
-                container = hou.node("/img").createNode("copnet")
+        create_data = _CREATABLE_CATEGORY_MAPPINGS.get(category_name)
 
-            case "Cop2":
-                container = hou.node("/img").createNode("img")
+        if create_data is not None:
+            container = hou.node(create_data[0]).createNode(create_data[1])
 
-            case "Dop":
-                container = hou.node("/obj").createNode("dopnet")
+        else:
+            raise exceptions.UnsupportedCategoryError(category)
 
-            case "Sop":
-                container = hou.node("/obj").createNode("geo")
-
-            case "Top":
-                container = hou.node("/obj").createNode("topnet")
-
-            # If a known context cannot be found, raise an error.
-            case _:
-                raise exceptions.UnsupportedCategoryError(category)
-
+    try:
         yield container
 
+    finally:
         # Destroy the created container.
         if destroy:
             container.destroy()
@@ -192,7 +195,7 @@ def restore_current_selection() -> Generator[None, None, None]:
     ...     # Perform actions that could change the selection.
     ...
     """
-    # Stash for restoring afterwards.
+    # Stash for restoring afterward.
     selected = hou.selectedItems()
 
     hou.clearAllSelected()
