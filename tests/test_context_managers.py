@@ -197,7 +197,6 @@ def test_context_container(category_name, destroy, raiser, expected):
             assert container.path()
 
 
-
 def test_restore_current_selection(obj_test_node):
     """Test houdini_core_tools.context_managers.restore_current_selection()."""
     node1 = obj_test_node.node("geo1")
