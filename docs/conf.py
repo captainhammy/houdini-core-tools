@@ -6,13 +6,29 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-import os
+import pathlib
 import sys
-sys.path.insert(0, os.path.abspath("../src/python"))
 
-project = 'houdini-core-tools'
-copyright = '2024, Graham Thompson'
-author = 'Graham Thompson'
+from dunamai import Pattern, Version
+from sphinx_pyproject import SphinxConfig
+
+
+sys.path.insert(0, pathlib.Path("../src/python").resolve().as_posix())
+
+try:
+    version = Version.from_git(Pattern.DefaultUnprefixed, strict=True).serialize()
+
+except RuntimeError:
+    version = "0.1.0"
+
+config = SphinxConfig(
+    "../pyproject.toml",
+    globalns=globals(),
+    config_overrides={"version": version}
+)
+
+project = config.name
+copyright = f'%Y, {author}'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
