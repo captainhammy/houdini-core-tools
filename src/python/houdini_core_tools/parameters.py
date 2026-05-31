@@ -406,9 +406,9 @@ def get_multiparm_containing_folders(
     If the name is contained in one or more multiparm folders, the returned templates
     will be ordered from innermost to outermost
 
-    |_ outer
-      |_ inner#
-        |_ param#_#
+    outer
+      inner#
+        param#_#
 
     In a situation like above, querying for containing folders of param#_# would
     result in a tuple ordered as follows: (<hou.FolderParmTemplate inner#>,  <hou.FolderParmTemplate outer>)
@@ -449,9 +449,9 @@ def get_multiparm_container_offsets(name: str, parm_template_group: hou.ParmTemp
     If the name is contained in one or more multiparm folders, the returned offsets
     will be ordered outermost to innermost
 
-    |_ outer (starting offset 0)
-      |_ inner# (starting offset 1)
-        |_ param#_#
+    outer (starting offset 0)
+      inner# (starting offset 1)
+        param#_#
 
     In a situation like above, querying for containing offsets of param#_# would
     result in a tuple ordered as follows: (0, 1)

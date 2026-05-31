@@ -433,7 +433,7 @@ def num_points(geometry: hou.Geometry) -> int:
         geometry: The geometry to get the point count for.
 
     Returns:
-        The point count:
+        The point count
     """
     return geometry.intrinsicValue("pointcount")
 
@@ -448,7 +448,7 @@ def num_prims(geometry: hou.Geometry) -> int:
         geometry: The geometry to get the primitive count for.
 
     Returns:
-        The primitive count:
+        The primitive count
     """
     return geometry.intrinsicValue("primitivecount")
 
@@ -618,7 +618,7 @@ def reverse_prim(prim: hou.Prim) -> None:
         prim: The primitive to reverse.
 
     Raises:
-        GeometryPermissionError: If the target geometry is read only.
+        hou.GeometryPermissionError: If the target geometry is read only.
     """
     geometry = prim.geometry()
 

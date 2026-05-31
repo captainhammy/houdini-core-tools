@@ -65,6 +65,7 @@ authors = [
         commands = [[ "pydocstringformatter", "--write", "src/"]]
 
     [tool.tox.env.docs]
+        basepython = "python3.12"
         allowlist_externals = ["echo"]
         dependency_groups = ["docs"]
         commands = [

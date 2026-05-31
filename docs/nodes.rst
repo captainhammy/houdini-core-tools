@@ -4,7 +4,7 @@
 Node Tools
 ==========
 
-The :mod:`~houdini_core_tools.nodes` module provides tools related to dealing with a Houdini nodes.
+The :mod:`~houdini_core_tools.nodes` module provides tools related to dealing with Houdini nodes.
 
 
 disconnect_all_inputs
@@ -56,18 +56,3 @@ This function used ``opls -d -l`` to extract the information
     / -> opls -d -l /obj/geo1
     d---e-cs /obj/geo1                      Aug 23 09:24 graham [rwxrwxrwx]
 
-
-get_node_descriptive_parameter
-------------------------------
-
-The :func:`get_node_descriptive_parameter` function will return the user name of the node's creator.
-
-
-get_node_dive_target
---------------------
-
-The :func:`get_node_dive_target` function will return the user name of the node's creator.
-
-
-
-.. image:: images/nodes_definition_nodes.png

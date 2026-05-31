@@ -8,6 +8,7 @@
 
 import pathlib
 import sys
+from datetime import date
 
 from dunamai import Pattern, Version
 from sphinx_pyproject import SphinxConfig
@@ -28,7 +29,7 @@ config = SphinxConfig(
 )
 
 project = config.name
-copyright = f'%Y, {author}'
+copyright = f'{date.today().year}, {author}'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -59,3 +60,6 @@ autodoc_member_order = "bysource"
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+nitpicky = True
+nitpick_ignore = [('py:const', 'None')]
