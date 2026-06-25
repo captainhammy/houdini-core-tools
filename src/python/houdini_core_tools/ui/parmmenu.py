@@ -44,9 +44,9 @@ def _check_valid_to_convert(parm: hou.Parm, reference_indicator: str) -> bool:
         if parm.keyframes():
             return False
 
-        # If the path is the same as the raw path then we can say that we
-        # can show the menu item.  If the path is not the same as the
-        # unexpanded we won't say yes because it would be some sort of
+        # If the path is the same as the raw path, then we can say that we
+        # can show the menu item.  If the path is different from the
+        # unexpanded, we won't say yes because it would be some sort of
         # expression which we don't want to mess with.
         if path == parm.unexpandedString() and parm.evalAsNode() is not None:
             return True

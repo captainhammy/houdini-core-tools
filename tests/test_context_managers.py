@@ -1,7 +1,11 @@
 """Test the houdini_core_tools.context_managers module."""
 
+# Future
+from __future__ import annotations
+
 # Standard Library
 from contextlib import nullcontext
+from typing import TYPE_CHECKING
 
 # Third Party
 import pytest
@@ -12,6 +16,9 @@ from houdini_core_tools import context_managers, exceptions
 # Houdini
 import hou
 
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
 pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 
 
@@ -21,7 +28,7 @@ pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 class Test_emit_varchange:
     """Test houdini_core_tools.context_managers.emit_varchange()."""
 
-    def test_as_with(self, mocker):
+    def test_as_with(self, mocker: MockerFixture) -> None:
         """Test using the context manager with the 'with' statement."""
         mock_hscript = mocker.patch("hou.hscript")
 
@@ -43,16 +50,16 @@ class Test_emit_varchange:
             mocker.call("call d"),
         ))
 
-    def test_as_decorator(self, mocker):
+    def test_as_decorator(self, mocker: MockerFixture) -> None:
         """Test using the context manager as a decorator."""
         mock_hscript = mocker.patch("hou.hscript")
 
         @context_managers.emit_varchange()
-        def child():
+        def child() -> None:
             hou.hscript("child a")
 
         @context_managers.emit_varchange()
-        def parent():
+        def parent() -> None:
             hou.hscript("parent a")
 
             child()
@@ -74,7 +81,7 @@ class Test_emit_varchange:
             mocker.call("call b"),
         ))
 
-    def test_exception_handling(self, mocker):
+    def test_exception_handling(self, mocker: MockerFixture) -> None:
         """Test that varchange is called if an exception happens."""
         mock_hscript = mocker.patch("hou.hscript")
 
@@ -100,7 +107,7 @@ class Test_emit_varchange:
 class Test_temporarily_unlock_parameters:
     """Test houdini_core_tools.context_managers.temporarily_unlock_parameters()."""
 
-    def test_single(self, obj_test_node):
+    def test_single(self, obj_test_node: hou.ObjNode) -> None:
         """Test for a single parameter."""
         parm = obj_test_node.parm("scale")
 
@@ -113,7 +120,7 @@ class Test_temporarily_unlock_parameters:
         assert parm.isLocked()
         assert parm.eval() == 1
 
-    def test_single_unlocked(self, obj_test_node):
+    def test_single_unlocked(self, obj_test_node: hou.ObjNode) -> None:
         """Test for a single parameter that is not locked."""
         parm = obj_test_node.parm("scale")
 
@@ -126,7 +133,7 @@ class Test_temporarily_unlock_parameters:
         assert not parm.isLocked()
         assert parm.eval() == 2
 
-    def test_parm_tuple(self, obj_test_node):
+    def test_parm_tuple(self, obj_test_node: hou.ObjNode) -> None:
         """Test with a hou.ParmTuple."""
         parm_tuple = obj_test_node.parmTuple("t")
 
@@ -143,7 +150,7 @@ class Test_temporarily_unlock_parameters:
 
         assert parm_tuple.eval() == (4, 5, 6)
 
-    def test_inside_locked(self, obj_test_node):
+    def test_inside_locked(self, obj_test_node: hou.ObjNode) -> None:
         """Test for a parameter inside a locked digital asset."""
         parm = obj_test_node.node("test").parm("scale")
 
@@ -162,42 +169,44 @@ class Test_temporarily_unlock_parameters:
 @pytest.mark.parametrize(
     "category_name, destroy, raiser, expected",
     [
-        ("Object", False, None, hou.nodeType("Object/subnet")),
-        ("Driver", True, None, hou.nodeType("Driver/subnet")),
-        ("Lop", False, None, hou.nodeType("Lop/subnet")),
-        ("Shop", True, None, hou.nodeType("Shop/material")),
-        ("Vop", False, None, hou.nodeType("Vop/subnet")),
-        ("Cop2", True, None, hou.nodeType("CopNet/img")),
-        ("Cop", False, None, hou.nodeType("CopNet/copnet")),
-        ("Sop", True, None, hou.nodeType("Object/geo")),
-        ("Dop", False, None, hou.nodeType("Object/dopnet")),
-        ("Top", True, None, hou.nodeType("Object/topnet")),
+        ("Object", False, nullcontext(), hou.nodeType("Object/subnet")),
+        ("Driver", True, nullcontext(), hou.nodeType("Driver/subnet")),
+        ("Lop", False, nullcontext(), hou.nodeType("Lop/subnet")),
+        ("Shop", True, nullcontext(), hou.nodeType("Shop/material")),
+        ("Vop", False, nullcontext(), hou.nodeType("Vop/subnet")),
+        ("Cop2", True, nullcontext(), hou.nodeType("CopNet/img")),
+        ("Cop", False, nullcontext(), hou.nodeType("CopNet/copnet")),
+        ("Sop", True, nullcontext(), hou.nodeType("Object/geo")),
+        ("Dop", False, nullcontext(), hou.nodeType("Object/dopnet")),
+        ("Top", True, nullcontext(), hou.nodeType("Object/topnet")),
         ("Manager", False, pytest.raises(exceptions.UnsupportedCategoryError), None),
     ],
 )
-def test_context_container(category_name, destroy, raiser, expected):
+def test_context_container(
+    category_name: str,
+    destroy: bool,
+    raiser: nullcontext | pytest.RaisesExc[exceptions.UnsupportedCategoryError],
+    expected: hou.NodeType | None,
+) -> None:
     """Test houdini_core_tools.context_managers.context_container()."""
     category = hou.nodeTypeCategories().get(category_name)
 
     if category is None:
         pytest.skip(f"Category {category_name} not available in {hou.applicationVersionString()}")
 
-    if raiser is None:
-        raiser = nullcontext()
-
     with raiser, context_managers.context_container(category, destroy=destroy) as container:
         assert container.type() == expected
 
     if expected is not None:
         # If the container was expected to be deleted, trying to access it will result in
-        # a hou.ObjectWasDeleted exception so use that to confirm it was deleted.
+        # a hou.ObjectWasDeleted exception, so use that to confirm it was deleted.
         persistence_raiser = pytest.raises(hou.ObjectWasDeleted) if destroy else nullcontext()
 
         with persistence_raiser:
             assert container.path()
 
 
-def test_restore_current_selection(obj_test_node):
+def test_restore_current_selection(obj_test_node: hou.ObjNode) -> None:
     """Test houdini_core_tools.context_managers.restore_current_selection()."""
     node1 = obj_test_node.node("geo1")
     node1.setSelected(True)
@@ -222,7 +231,7 @@ def test_restore_current_selection(obj_test_node):
     assert len(hou.selectedItems()) == 2
 
 
-def test_set_current_node():
+def test_set_current_node() -> None:
     """Test houdini_core_tools.context_managers.set_current_node()."""
     assert hou.pwd() == hou.node("/")
 
@@ -232,7 +241,7 @@ def test_set_current_node():
     assert hou.pwd() == hou.node("/")
 
 
-def test_set_temporary_update_mode():
+def test_set_temporary_update_mode() -> None:
     """Test houdini_core_tools.context_managers.set_temporary_update_mode()."""
     # Ensure the current mode is AutoUpdate.
     hou.setUpdateMode(hou.updateMode.AutoUpdate)

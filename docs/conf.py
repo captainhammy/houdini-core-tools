@@ -1,15 +1,11 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""Configure documentation for Sphinx."""
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-
+# Standard Library
 import pathlib
 import sys
 from datetime import date
 
+# Third Party
 from dunamai import Pattern, Version
 from sphinx_pyproject import SphinxConfig
 
@@ -29,7 +25,7 @@ config = SphinxConfig(
 )
 
 project = config.name
-copyright = f'{date.today().year}, {author}'
+copyright = f"{date.today().year}, {config.author}"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -44,11 +40,11 @@ extensions = [
     "enum_tools.autoenum",
 ]
 
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
+    "python": ("https://docs.python.org/3", None),
     "hou": ("https://www.sidefx.com/docs/houdini/hom/hou", "objects_hou.inv"),
 }
 
@@ -58,8 +54,8 @@ autodoc_member_order = "bysource"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_theme = "sphinx_rtd_theme"
+html_static_path = ["_static"]
 
 nitpicky = True
-nitpick_ignore = [('py:const', 'None')]
+nitpick_ignore = [("py:const", "None")]

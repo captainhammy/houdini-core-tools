@@ -56,14 +56,16 @@ def get_menu_separator_entry() -> tuple[str, str]:
 
 
 def make_houdini_menu(pre_items: Sequence[tuple[str, str]] | None = None, *, add_separator: bool = False) -> Callable:
-    """Function decorator which takes a list of strings and converts it to a Houdini style menu.
+    """Function decorator that takes a list of strings and converts it to a Houdini style menu.
 
-    >>> @make_houdini_menu(pre_items=[('z', 'y')], add_separator=True)
-    ... def menu_builder():
-    ...     return ['a', 'b', 'c']
-    ...
-    >>> print(menu_builder())
-    ['z', 'y', '__separator__', '', 'a', 'a', 'b', 'b', 'c', 'c']
+    ::
+
+        @make_houdini_menu(pre_items=[('z', 'y')], add_separator=True)
+        def menu_builder():
+            return ['a', 'b', 'c']
+
+        print(menu_builder())
+        ['z', 'y', '__separator__', '', 'a', 'a', 'b', 'b', 'c', 'c']
 
     Args:
         pre_items: Optional items to insert before the generated values.
@@ -73,9 +75,9 @@ def make_houdini_menu(pre_items: Sequence[tuple[str, str]] | None = None, *, add
         The wrapped function.
     """
 
-    def decorator(func):  # type: ignore
+    def decorator(func):  # noqa: ANN001, ANN202
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):  # type: ignore
+        def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
             # Store the wrapped function result.
             result = func(*args, **kwargs)
 

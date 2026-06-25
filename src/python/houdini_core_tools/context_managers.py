@@ -28,7 +28,7 @@ _CREATABLE_CATEGORY_MAPPINGS = {
     "Top": ("/obj", "topnet"),
 }
 
-# Types which can map directly to default scene nodes.
+# Types that can map directly to default scene nodes.
 _DIRECT_CATEGORY_MAPPINGS = {
     "Driver": hou.node("/out"),
     "Lop": hou.node("/stage"),
@@ -46,10 +46,11 @@ class emit_varchange(ContextDecorator):
 
     In the event of nested uses, only the outermost will execute the varchange.
 
-    >>> with emit_varchange():
-    ...     hou.hscript("set FOO=456")
-    ...
-    >>> # A varchange call will have been emitted for FOO.
+    ::
+
+        with emit_varchange():
+            hou.hscript("set FOO=456")
+            # A varchange call will have been emitted for FOO.
     """
 
     _ACTIVE = False
@@ -77,20 +78,20 @@ class emit_varchange(ContextDecorator):
 class temporarily_unlock_parameters(ContextDecorator):
     """Context manager to temporarily unlock parameters and re-lock them on exit.
 
-    >>> my_parameter = hou.parm("/obj/geo1/scale")
-    >>> with temporarily_unlock_parameters(my_parameter):
-    ...     my_parameter.set(3)
-    ...
+    ::
+
+        my_parameter = hou.parm("/obj/geo1/scale")
+        with temporarily_unlock_parameters(my_parameter):
+            my_parameter.set(3)
 
     Args:
         parms_to_unlock: The parameter(s) to unlock.
     """
 
     def __init__(self, parms_to_unlock: hou.Parm | hou.ParmTuple | Iterable[hou.Parm]) -> None:
-        # If the item is a parm tuple then convert it to its constituent hou.Parm
-        # objects.
+        # If the item is a parm tuple, convert it to its constituent hou.Parm objects.
         if isinstance(parms_to_unlock, hou.ParmTuple):
-            parms_to_unlock = tuple(parms_to_unlock)  # type: ignore
+            parms_to_unlock = tuple(parms_to_unlock)
 
         if not isinstance(parms_to_unlock, Iterable):
             parms_to_unlock = [parms_to_unlock]
@@ -123,7 +124,7 @@ class temporarily_unlock_parameters(ContextDecorator):
 
                 # This might be raised if the parameter is inside a locked HDA
                 # or not included in a take. Since Houdini messages never contain
-                # useful information like the offending parameter we'll re-raise
+                # useful information like the offending parameter, we'll re-raise
                 # an exception with a better message.
                 except hou.PermissionError as inst:
                     raise hou.PermissionError(  # noqa: TRY003
@@ -138,11 +139,14 @@ class temporarily_unlock_parameters(ContextDecorator):
 def context_container(category: hou.NodeTypeCategory, *, destroy: bool = True) -> Generator[hou.OpNode, None, None]:
     """Context manager that provides an appropriate node to create a node under.
 
-    If the container type needs to be created it will be, then it will be destroyed after
+    If the container type needs to be created, it will be, then it will be destroyed after
     the scope of the manager if `destroy` is True.
 
-    >>> with context_container(hou.sopNodeTypeCategory()) as container:
-    ...     container.createNode("box")
+    ::
+
+        with context_container(hou.sopNodeTypeCategory()) as container:
+            container.createNode("box")
+            ...
 
     Args:
         category: The node type category of the node to create.
@@ -156,16 +160,14 @@ def context_container(category: hou.NodeTypeCategory, *, destroy: bool = True) -
     """
     category_name = category.name()
 
-    category_name = category.name()
-
     container = _DIRECT_CATEGORY_MAPPINGS.get(category_name)
 
-    # If there was a direct mapping then use it.
+    # If there was a direct mapping, then use it.
     if container is not None:
         container = container.createNode("subnet")
 
-        # Otherwise, check for specific contexts and create the requisite node
-        # of a matching context.
+    # Otherwise, check for specific contexts and create the requisite node
+    # of a matching context.
     else:
         create_data = _CREATABLE_CATEGORY_MAPPINGS.get(category_name)
 
@@ -191,9 +193,11 @@ def restore_current_selection() -> Generator[None, None, None]:
     The selection will be restored in the event an exception occurs inside
     the block.
 
-    >>> with restore_current_selection():
-    ...     # Perform actions that could change the selection.
-    ...
+    ::
+
+        with restore_current_selection():
+            # Perform actions that could change the selection.
+            ...
     """
     # Stash for restoring afterward.
     selected = hou.selectedItems()
@@ -223,9 +227,11 @@ def set_current_node(
     The current mode will be restored in the event an exception occurs inside
     the block.
 
-    >>> with set_current_node(hou.node("/obj")):
-    ...     # Perform actions where hou.pwd() is used.
-    ...
+    ..
+
+        with set_current_node(hou.node("/obj")):
+            # Perform actions where hou.pwd() is used.
+            ...
 
     Args:
         node: The temporary node.
@@ -250,9 +256,11 @@ def set_temporary_update_mode(
     The update mode will be restored in the event an exception occurs inside
     the block.
 
-    >>> with set_temporary_update_mode(hou.updateMode.Manual):
-    ...     # Perform actions while in manual mode.
-    ...
+    ::
+
+        with set_temporary_update_mode(hou.updateMode.Manual):
+            # Perform actions while in manual mode.
+            ...
 
     Args:
         update_mode: The temporary update mode.
@@ -260,7 +268,7 @@ def set_temporary_update_mode(
     # Get the current update mode to restore it after.
     current_mode = hou.updateModeSetting()
 
-    hou.setUpdateMode(update_mode)  # type: ignore
+    hou.setUpdateMode(update_mode)
 
     try:
         yield

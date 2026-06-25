@@ -5,13 +5,16 @@ from __future__ import annotations
 
 # Standard Library
 import json
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, TypeAlias
 
 # Houdini
 import hou
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    # Define the JSON serializable type
+    JSONValue: TypeAlias = int | float | str | bool | dict[str, "JSONValue"] | list["JSONValue"] | None
 
 
 # Functions
@@ -44,7 +47,7 @@ def disconnect_all_outputs(node: hou.Node) -> None:
 
 
 def get_containing_node(node: hou.Node) -> hou.Node | None:
-    """Returns the nearest parent node which is of a different node type category.
+    """Returns the nearest parent node, which is of a different node type category.
 
     Args:
         node: The node to find the containing node of.
@@ -59,7 +62,7 @@ def get_containing_node(node: hou.Node) -> hou.Node | None:
         parent_category = parent_type.category()
 
         # If the parent node is the root node, /, then an exception
-        # will be thrown so we need to account for it.
+        # will be thrown, so we need to account for it.
         try:
             parent_child_type = parent_type.childTypeCategory()
 
@@ -115,14 +118,14 @@ def get_node_type_tool(node_or_node_type: hou.Node | hou.NodeType) -> hou.Tool |
     tools = hou.shelves.tools()
 
     # Build a tool name string.  Tool names are defined as
-    # OperatorTable_OperatorName. (i.e. sop_sphere, object_geo).
+    # OperatorTable_OperatorName (sop_sphere, object_geo, etc).
     tool_name = f"{node_or_node_type.category().name().lower()}_{node_or_node_type.name()}"
 
     return tools.get(tool_name)
 
 
 def node_is_contained_by(node: hou.Node, containing_node: hou.Node) -> bool:
-    """Test if a node is a contained within another node.
+    """Test if a node is contained within another node.
 
     Args:
         node: The node to check for being contained.
@@ -147,7 +150,7 @@ def node_is_contained_by(node: hou.Node, containing_node: hou.Node) -> bool:
     return False
 
 
-def read_from_user_data(node: hou.Node, user_data_name: str) -> Any:
+def read_from_user_data(node: hou.Node, user_data_name: str) -> JSONValue:
     """Read a data structure stored in a node's user data dictionary.
 
     Use this in conjunction with `store_as_user_data`.
@@ -162,12 +165,12 @@ def read_from_user_data(node: hou.Node, user_data_name: str) -> Any:
     return json.loads(node.userData(user_data_name))
 
 
-def store_as_user_data(node: hou.Node, user_data_name: str, data: Any) -> None:
+def store_as_user_data(node: hou.Node, user_data_name: str, data: JSONValue) -> None:
     """Store a data structure in a node's user data dictionary.
 
     Use this in conjunction with `read_from_user_data`.
 
-    The structure to be stored must be encodable by json.
+    The structure to be stored must be encodable by .json.
 
     Args:
         node: The node to store the data on.

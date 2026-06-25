@@ -16,7 +16,7 @@ import hou
     "bbox,delta,expected_min",
     ((hou.BoundingBox(-1, -1.75, -3, 1, 1.75, 3), hou.Vector3(1, 0.25, 1), hou.Vector3(0, -1.5, -2)),),
 )
-def test_add_to_bounding_box_min(bbox, delta, expected_min):
+def test_add_to_bounding_box_min(bbox: hou.BoundingBox, delta: hou.Vector3, expected_min: hou.Vector3) -> None:
     """Test houdini_core_tools.bounding.add_to_bounding_box_min()."""
     houdini_core_tools.bounding.add_to_bounding_box_min(bbox, delta)
 
@@ -27,7 +27,7 @@ def test_add_to_bounding_box_min(bbox, delta, expected_min):
     "bbox,delta,expected_max",
     ((hou.BoundingBox(-1, -1.75, -3, 1, 1.75, 3), hou.Vector3(2, 0.25, 1), hou.Vector3(3, 2, 4)),),
 )
-def test_add_to_bounding_box_max(bbox, delta, expected_max):
+def test_add_to_bounding_box_max(bbox: hou.BoundingBox, delta: hou.Vector3, expected_max: hou.Vector3) -> None:
     """Test houdini_core_tools.bounding.add_to_bounding_box_max()."""
     houdini_core_tools.bounding.add_to_bounding_box_max(bbox, delta)
 
@@ -35,7 +35,7 @@ def test_add_to_bounding_box_max(bbox, delta, expected_max):
 
 
 @pytest.mark.parametrize("bbox,expected", ((hou.BoundingBox(-1, -1.75, -3, 1, 1.75, 3), 80),))
-def test_bounding_box_area(bbox, expected):
+def test_bounding_box_area(bbox: hou.BoundingBox, expected: int) -> None:
     """Test houdini_core_tools.bounding.bounding_box_area()."""
     assert houdini_core_tools.bounding.bounding_box_area(bbox) == expected
 
@@ -45,10 +45,10 @@ def test_bounding_box_area(bbox, expected):
     [
         (hou.BoundingBox(-1, -1, -1, 1, 1, 1), True),  # Inside
         (hou.BoundingBox(0, 0, 0, 1.5, 1.5, 1.5), False),  # Not inside
-        (hou.BoundingBox(-0.5, -0.5, -0.5, 0.5, 0.5, 0.5), False),  # Identical, will fail
+        (hou.BoundingBox(-0.5, -0.5, -0.5, 0.5, 0.5, 0.5), False),  # Identical and will fail
     ],
 )
-def test_bounding_box_is_inside(bbox, expected):
+def test_bounding_box_is_inside(bbox: hou.BoundingBox, expected: bool) -> None:
     """Test houdini_core_tools.bounding.bounding_box_is_inside()."""
     test_bbox = hou.BoundingBox(-0.5, -0.5, -0.5, 0.5, 0.5, 0.5)
 
@@ -56,7 +56,7 @@ def test_bounding_box_is_inside(bbox, expected):
 
 
 @pytest.mark.parametrize("bbox,expected", ((hou.BoundingBox(-1, -1.75, -3, 1, 1.75, 3), 42),))
-def test_bounding_box_volume(bbox, expected):
+def test_bounding_box_volume(bbox: hou.BoundingBox, expected: int) -> None:
     """Test houdini_core_tools.bounding.bounding_box_volume()."""
     assert houdini_core_tools.bounding.bounding_box_volume(bbox) == expected
 
@@ -73,7 +73,7 @@ def test_bounding_box_volume(bbox, expected):
         (hou.BoundingBox(-0.358, 0.63, 0.215, 0.642, 1.63, 0.784), False),
     ],
 )
-def test_bounding_boxes_intersect(bbox, expected):
+def test_bounding_boxes_intersect(bbox: hou.BoundingBox, expected: bool) -> None:
     """Test houdini_core_tools.bounding.bounding_boxes_intersect()."""
     test_bbox = hou.BoundingBox(0, 0, 0, 0.5, 0.5, 0.5)
 
@@ -92,7 +92,9 @@ def test_bounding_boxes_intersect(bbox, expected):
         (hou.BoundingBox(0, 0, 0, 0.5, 0.5, 0.5), hou.BoundingBox(-0.5, -0.5, -0.5, -0.1, -0.1, -0.1), None),
     ),
 )
-def test_compute_bounding_box_intersection(bbox1, bbox2, expected_vecs):
+def test_compute_bounding_box_intersection(
+    bbox1: hou.BoundingBox, bbox2: hou.BoundingBox, expected_vecs: tuple[hou.Vector3, hou.Vector3] | None
+) -> None:
     """Test houdini_core_tools.bounding.compute_bounding_box_intersection()."""
     result = houdini_core_tools.bounding.compute_bounding_box_intersection(bbox1, bbox2)
 
@@ -116,7 +118,9 @@ def test_compute_bounding_box_intersection(bbox1, bbox2, expected_vecs):
         ),
     ),
 )
-def test_expand_bounding_box(bbox, deltas, expected_vecs):
+def test_expand_bounding_box(
+    bbox: hou.BoundingBox, deltas: tuple[int, int, int], expected_vecs: tuple[hou.Vector3, hou.Vector3]
+) -> None:
     """Test houdini_core_tools.bounding.expand_bounding_box()."""
     houdini_core_tools.bounding.expand_bounding_box(bbox, *deltas)
 

@@ -1,7 +1,11 @@
 """Test the houdini_core_tools.geometry module."""
 
+# Future
+from __future__ import annotations
+
 # Standard Library
 from contextlib import nullcontext
+from typing import TYPE_CHECKING
 
 # Third Party
 import pytest
@@ -13,8 +17,10 @@ from houdini_core_tools import exceptions
 # Houdini
 import hou
 
-pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
+pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 
 # Tests
 
@@ -28,7 +34,13 @@ pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
         (hou.attribType.Global, "test_detail", pytest.raises(exceptions.InvalidAttributeTypeError), None),
     ),
 )
-def test__set_all_shared_values(obj_test_geo_copy, attrib_type, attrib_name, context, expected):
+def test__set_all_shared_values(
+    obj_test_geo_copy: hou.Geometry,
+    attrib_type: hou.attribType,
+    attrib_name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.InvalidAttributeTypeError],
+    expected: tuple[str, ...] | None,
+) -> None:
     """Test houdini_core_tools.geometry._set_all_shared_values()."""
     attrib = houdini_core_tools.geometry.find_attrib(obj_test_geo_copy, attrib_type, attrib_name)
 
@@ -97,8 +109,14 @@ def test__set_all_shared_values(obj_test_geo_copy, attrib_type, attrib_name, con
     ),
 )
 def test__set_group_shared_values(
-    obj_test_geo_copy, attrib_type, attrib_name, context, group_type, group_name, expected
-):
+    obj_test_geo_copy: hou.Geometry,
+    attrib_type: hou.attribType,
+    attrib_name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.InvalidAttributeTypeError],
+    group_type: type[hou.EdgeGroup | hou.PointGroup | hou.PrimGroup | hou.VertexGroup],
+    group_name: str,
+    expected: tuple[str],
+) -> None:
     """Test houdini_core_tools.geometry._set_group_shared_values()."""
     attrib = houdini_core_tools.geometry.find_attrib(obj_test_geo_copy, attrib_type, attrib_name)
     group = houdini_core_tools.geometry.find_group(obj_test_geo_copy, group_type, group_name) if group_name else None
@@ -129,7 +147,9 @@ def test__set_group_shared_values(
         (5, True, False),
     ),
 )
-def test_check_minimum_polygon_vertex_count(obj_test_geo, min_verts, ignore_open, expected):
+def test_check_minimum_polygon_vertex_count(
+    obj_test_geo: hou.Geometry, min_verts: int, ignore_open: bool, expected: bool
+) -> None:
     """Test houdini_core_tools.geometry.check_minimum_polygon_vertex_count()."""
     assert (
         houdini_core_tools.geometry.check_minimum_polygon_vertex_count(
@@ -142,7 +162,7 @@ def test_check_minimum_polygon_vertex_count(obj_test_geo, min_verts, ignore_open
 
 
 @pytest.mark.parametrize("pt_num,expected", ((4, (1, 3, 5, 7)),))
-def test_connected_points(obj_test_geo, pt_num, expected):
+def test_connected_points(obj_test_geo: hou.Geometry, pt_num: int, expected: tuple[int]) -> None:
     """Test houdini_core_tools.geometry.connected_points."""
     target = obj_test_geo.globPoints(" ".join(str(ptnum) for ptnum in expected))
 
@@ -162,7 +182,7 @@ def test_connected_points(obj_test_geo, pt_num, expected):
         (3, 0, False),
     ),
 )
-def test_face_has_edge(obj_test_geo, ptnum1, ptnum2, expected):
+def test_face_has_edge(obj_test_geo: hou.Geometry, ptnum1: int, ptnum2: int, expected: bool) -> None:
     """Test houdini_core_tools.geometry.face_has_edge()."""
     face = obj_test_geo.iterPrims()[0]
 
@@ -173,7 +193,7 @@ def test_face_has_edge(obj_test_geo, ptnum1, ptnum2, expected):
 
 
 @pytest.mark.parametrize(
-    "attrib_type,name,ctx",
+    "attrib_type,name,context,",
     (
         (hou.attribType.Vertex, "vertex_attrib", nullcontext()),
         (hou.attribType.Point, "point_attrib", nullcontext()),
@@ -182,9 +202,14 @@ def test_face_has_edge(obj_test_geo, ptnum1, ptnum2, expected):
         (None, "bad", pytest.raises(exceptions.UnexpectedAttributeTypeError)),
     ),
 )
-def test_find_attrib(obj_test_geo, attrib_type, name, ctx):
+def test_find_attrib(
+    obj_test_geo: hou.Geometry,
+    attrib_type: hou.attribType,
+    name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.InvalidAttributeTypeError],
+) -> None:
     """Test houdini_core_tools.geometry.find_attrib()."""
-    with ctx:
+    with context:
         result = houdini_core_tools.geometry.find_attrib(obj_test_geo, attrib_type, name)
 
         assert isinstance(result, hou.Attrib)
@@ -193,7 +218,7 @@ def test_find_attrib(obj_test_geo, attrib_type, name, ctx):
 
 
 @pytest.mark.parametrize(
-    "group_type,name,ctx",
+    "group_type,name,context",
     (
         (hou.VertexGroup, "vertex_group", nullcontext()),
         (hou.PointGroup, "point_group", nullcontext()),
@@ -202,9 +227,14 @@ def test_find_attrib(obj_test_geo, attrib_type, name, ctx):
         (hou.Attrib, "bad", pytest.raises(exceptions.UnexpectedGroupTypeError)),
     ),
 )
-def test_find_group(obj_test_geo, group_type, name, ctx):
+def test_find_group(
+    obj_test_geo: hou.Geometry,
+    group_type: type[hou.EdgeGroup | hou.PointGroup | hou.PrimGroup | hou.VertexGroup],
+    name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.InvalidAttributeTypeError],
+) -> None:
     """Test houdini_core_tools.geometry.find_group()."""
-    with ctx:
+    with context:
         result = houdini_core_tools.geometry.find_group(obj_test_geo, group_type, name)
 
         assert isinstance(result, group_type)
@@ -219,7 +249,7 @@ def test_find_group(obj_test_geo, group_type, name, ctx):
         ("detail2", "detail3", False),
     ),
 )
-def test_geo_details_match(obj_test_node, detail1, detail2, expected):
+def test_geo_details_match(obj_test_node: hou.ObjNode, detail1: str, detail2: str, expected: bool) -> None:
     """Test houdini_core_tools.geometry.geo_details_match()."""
     geo1 = obj_test_node.node(detail1).geometry()
     geo2 = obj_test_node.node(detail2).geometry()
@@ -234,7 +264,9 @@ def test_geo_details_match(obj_test_node, detail1, detail2, expected):
         ("shared", True),
     ),
 )
-def test_geometry_has_prims_with_shared_vertex_points(obj_test_node, node_name, expected):
+def test_geometry_has_prims_with_shared_vertex_points(
+    obj_test_node: hou.ObjNode, node_name: str, expected: bool
+) -> None:
     """Test houdini_core_tools.geometry.geometry_has_prims_with_shared_vertex_points()."""
     geometry = obj_test_node.node(node_name).geometry()
 
@@ -267,7 +299,12 @@ def test_geometry_has_prims_with_shared_vertex_points(obj_test_node, node_name, 
         ),
     ),
 )
-def test_get_oriented_point_transform(obj_test_node, node_name, context, expected):
+def test_get_oriented_point_transform(
+    obj_test_node: hou.ObjNode,
+    node_name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.InvalidAttributeTypeError],
+    expected: hou.Matrix4,
+) -> None:
     """Test houdini_core_tools.geometry.get_oriented_point_transform()."""
     geo = obj_test_node.node(node_name).geometry()
     pt = geo.points()[0]
@@ -285,7 +322,7 @@ def test_get_oriented_point_transform(obj_test_node, node_name, context, expecte
         ([0, 1, 2, 4], (0, 1, 2)),
     ),
 )
-def test_get_points_from_list(obj_test_geo, points_list, expected):
+def test_get_points_from_list(obj_test_geo: hou.Geometry, points_list: list[int], expected: tuple[int, ...]) -> None:
     """Test houdini_core_tools.geometry.get_points_from_list()."""
     result = houdini_core_tools.geometry.get_points_from_list(obj_test_geo, points_list)
 
@@ -303,7 +340,7 @@ def test_get_points_from_list(obj_test_geo, points_list, expected):
         ([0, 1, 2, 4], (0, 1, 2)),
     ),
 )
-def test_get_prims_from_list(obj_test_geo, prims_list, expected):
+def test_get_prims_from_list(obj_test_geo: hou.Geometry, prims_list: list[int], expected: tuple[int, ...]) -> None:
     """Test houdini_core_tools.geometry.get_prims_from_list()."""
     result = houdini_core_tools.geometry.get_prims_from_list(obj_test_geo, prims_list)
 
@@ -321,7 +358,9 @@ def test_get_prims_from_list(obj_test_geo, prims_list, expected):
         ("shared", (81,)),
     ),
 )
-def test_get_primitives_with_shared_vertex_points(obj_test_node, node_name, expected):
+def test_get_primitives_with_shared_vertex_points(
+    obj_test_node: hou.ObjNode, node_name: str, expected: tuple[int, ...]
+) -> None:
     """Test houdini_core_tools.geometry.get_primitives_with_shared_vertex_points()."""
     geometry = obj_test_node.node(node_name).geometry()
     expected_prims = tuple(geometry.iterPrims()[prim_num] for prim_num in expected)
@@ -334,7 +373,7 @@ def test_get_primitives_with_shared_vertex_points(obj_test_node, node_name, expe
 class Test_group_bounding_box:
     """Test houdini_core_tools.geometry.group_bounding_box()."""
 
-    def test_point_group(self, obj_test_geo):
+    def test_point_group(self, obj_test_geo: hou.Geometry) -> None:
         """Test getting the bounding box from a point group."""
         target = hou.BoundingBox(-4, 0, -1, -2, 0, 2)
 
@@ -343,7 +382,7 @@ class Test_group_bounding_box:
 
         assert bbox == target
 
-    def test_prim_group(self, obj_test_geo):
+    def test_prim_group(self, obj_test_geo: hou.Geometry) -> None:
         """Test getting the bounding box from a prim group."""
         target = hou.BoundingBox(-5, 0, -4, 4, 0, 5)
 
@@ -352,7 +391,7 @@ class Test_group_bounding_box:
 
         assert bbox == target
 
-    def test_edge_group(self, obj_test_geo):
+    def test_edge_group(self, obj_test_geo: hou.Geometry) -> None:
         """Test getting the bounding box from an edge group."""
         target = hou.BoundingBox(-5, 0, -5, 4, 0, 5)
 
@@ -361,23 +400,23 @@ class Test_group_bounding_box:
 
         assert bbox == target
 
-    def test_invalid(self):
+    def test_invalid(self) -> None:
         """Test an invalid argument."""
         with pytest.raises(exceptions.UnexpectedGroupTypeError):
             houdini_core_tools.geometry.group_bounding_box(hou.Vector3())
 
 
-def test_num_points(obj_test_geo):
+def test_num_points(obj_test_geo: hou.Geometry) -> None:
     """Test houdini_core_tools.geometry.num_points."""
     assert houdini_core_tools.geometry.num_points(obj_test_geo) == 5000
 
 
-def test_num_prims(obj_test_geo):
+def test_num_prims(obj_test_geo: hou.Geometry) -> None:
     """Test houdini_core_tools.geometry.num_prims()."""
     assert houdini_core_tools.geometry.num_prims(obj_test_geo) == 12
 
 
-def test_num_vertices(obj_test_geo):
+def test_num_vertices(obj_test_geo: hou.Geometry) -> None:
     """Test houdini_core_tools.geometry.num_vertices()."""
     assert houdini_core_tools.geometry.num_vertices(obj_test_geo) == 48
 
@@ -392,7 +431,7 @@ def test_num_vertices(obj_test_geo):
         "orient",
     ),
 )
-def test_point_instance_transform(obj_test_node, node_name):
+def test_point_instance_transform(obj_test_node: hou.ObjNode, node_name: str) -> None:
     """Test houdini_core_tools.geometry.point_instance_transform()."""
     geometry = obj_test_node.node(node_name).geometry()
     pt = geometry.points()[0]
@@ -406,7 +445,7 @@ def test_point_instance_transform(obj_test_node, node_name):
 
 
 @pytest.mark.parametrize("prim_num,expected", ((0, 4.375),))
-def test_primitive_area(obj_test_geo, prim_num, expected):
+def test_primitive_area(obj_test_geo: hou.Geometry, prim_num: int, expected: float) -> None:
     """Test houdini_core_tools.geometry.primitive_area()."""
     prim = obj_test_geo.iterPrims()[prim_num]
 
@@ -414,7 +453,7 @@ def test_primitive_area(obj_test_geo, prim_num, expected):
 
 
 @pytest.mark.parametrize("prim_num,expected", ((0, hou.Vector3(1.5, 1, -1)),))
-def test_primitive_bary_center(obj_test_geo, prim_num, expected):
+def test_primitive_bary_center(obj_test_geo: hou.Geometry, prim_num: int, expected: hou.Vector3) -> None:
     """Test houdini_core_tools.geometry.primitive_bary_center()."""
     prim = obj_test_geo.iterPrims()[prim_num]
 
@@ -422,7 +461,7 @@ def test_primitive_bary_center(obj_test_geo, prim_num, expected):
 
 
 @pytest.mark.parametrize("prim_num,expected", ((0, hou.BoundingBox(-0.75, 0, -0.875, 0.75, 1.5, 0.875)),))
-def test_primitive_bounding_box(obj_test_geo, prim_num, expected):
+def test_primitive_bounding_box(obj_test_geo: hou.Geometry, prim_num: int, expected: hou.BoundingBox) -> None:
     """Test houdini_core_tools.geometry.primitive_bounding_box()."""
     prim = obj_test_geo.iterPrims()[prim_num]
 
@@ -430,7 +469,7 @@ def test_primitive_bounding_box(obj_test_geo, prim_num, expected):
 
 
 @pytest.mark.parametrize("prim_num,expected", ((0, 6.5),))
-def test_primitive_perimeter(obj_test_geo, prim_num, expected):
+def test_primitive_perimeter(obj_test_geo: hou.Geometry, prim_num: int, expected: float) -> None:
     """Test houdini_core_tools.geometry.primitive_perimeter()."""
     prim = obj_test_geo.iterPrims()[prim_num]
 
@@ -438,7 +477,7 @@ def test_primitive_perimeter(obj_test_geo, prim_num, expected):
 
 
 @pytest.mark.parametrize("prim_num,expected", ((0, 0.1666666716337204),))
-def test_primitive_volume(obj_test_geo, prim_num, expected):
+def test_primitive_volume(obj_test_geo: hou.Geometry, prim_num: int, expected: float) -> None:
     """Test houdini_core_tools.geometry.primitive_volume()."""
     prim = obj_test_geo.iterPrims()[prim_num]
 
@@ -448,14 +487,14 @@ def test_primitive_volume(obj_test_geo, prim_num, expected):
 class Test_reverse_prim:
     """Test houdini_core_tools.geometry.reverse_prim()."""
 
-    def test_read_only(self, obj_test_geo):
-        """Test when the geometry is read only."""
+    def test_read_only(self, obj_test_geo: hou.Geometry) -> None:
+        """Test when the geometry is read-only."""
         prim = obj_test_geo.iterPrims()[0]
 
         with pytest.raises(hou.GeometryPermissionError):
             houdini_core_tools.geometry.reverse_prim(prim)
 
-    def test(self, obj_test_geo_copy):
+    def test(self, obj_test_geo_copy: hou.Geometry) -> None:
         """Test reversing the vertex order."""
         target = hou.Vector3(0, -1, 0)
 
@@ -485,7 +524,13 @@ class Test_reverse_prim:
         ),
     ),
 )
-def test_set_shared_string_attrib(mocker, obj_test_geo_copy, attrib_name, context, group_name):
+def test_set_shared_string_attrib(
+    mocker: MockerFixture,
+    obj_test_geo_copy: hou.Geometry,
+    attrib_name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.AttributeNotAStringError],
+    group_name: str | None,
+) -> None:
     """Test houdini_core_tools.geometry.set_shared_string_attrib()."""
     mock_set_all = mocker.patch("houdini_core_tools.geometry._set_all_shared_values")
     mock_set_group = mocker.patch("houdini_core_tools.geometry._set_group_shared_values")
@@ -509,7 +554,7 @@ def test_set_shared_string_attrib(mocker, obj_test_geo_copy, attrib_name, contex
             mock_set_group.assert_called_with(attrib, group, "value")
 
 
-def test_shared_edges(obj_test_geo):
+def test_shared_edges(obj_test_geo: hou.Geometry) -> None:
     """Test houdini_core_tools.geometry.shared_edges()."""
     pr0, pr1 = obj_test_geo.prims()
 

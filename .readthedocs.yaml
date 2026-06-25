@@ -12,8 +12,9 @@ build:
     python: "3.12"
   jobs:
       install:
-         # Since the install step is overridden, pip is no longer updated automatically.
+         # Since the installation step is overridden, pip is no longer updated automatically.
          - pip install --upgrade pip
+         # Install docs building requirements.
          - pip install --group docs
 
       build:

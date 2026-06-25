@@ -32,7 +32,7 @@ class _Singleton(type):
 
     _instances: ClassVar[dict] = {}
 
-    def __call__(cls, *args, **kwargs):  # type: ignore
+    def __call__(cls, *args, **kwargs):  # noqa: ANN002,ANN003, ANN204
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
 
@@ -65,7 +65,7 @@ class NodeGraphTitleManager(metaclass=_Singleton):
         """
         original = getattr(self, f"_original_{location.value}")
 
-        def title_wrapper(*args, **kwargs):  # type: ignore
+        def title_wrapper(*args, **kwargs) -> str:  # noqa: ANN002,ANN003
             value = value_func()
 
             title = original(*args, **kwargs) if include_default else ""
@@ -114,7 +114,7 @@ class NodeGraphTitleManager(metaclass=_Singleton):
             include_default: Whether to include the default title information.
         """
 
-        def value_func():  # type: ignore
+        def value_func():  # noqa: ANN202
             return value
 
         self.set_dynamic_title(location, value_func, include_default=include_default)

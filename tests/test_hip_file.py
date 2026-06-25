@@ -1,10 +1,14 @@
 """Test the houdini_core_tools.hip_file module."""
 
+# Future
+from __future__ import annotations
+
 # Standard Library
 import contextlib
 import datetime
-import os
+import pathlib
 from contextlib import nullcontext
+from typing import TYPE_CHECKING, Any
 
 # Third Party
 import pytest
@@ -15,11 +19,19 @@ from houdini_core_tools import hip_file
 # Houdini
 import hou
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from pytest_mock import MockerFixture
+
+
 # Fixtures
 
 
 @pytest.fixture
-def restore_frange_settings():
+def restore_frange_settings() -> Generator[None, Any, None]:
     """Restore the current frame and range settings after testing."""
     current_frame = hou.frame()
     frame_range = hou.playbar.frameRange()
@@ -42,7 +54,7 @@ def restore_frange_settings():
         ("_HIP_FOO", None),
     ),
 )
-def test__get_global_variable_value_from_file(shared_datadir, variable, expected):
+def test__get_global_variable_value_from_file(shared_datadir: Path, variable: str, expected: str | None) -> None:
     """Test houdini_core_tools.hip_file._get_global_variable_value_from_file()."""
     result = hip_file._get_global_variable_value_from_file(shared_datadir / "test_hip_saved_data.hiplc", variable)
 
@@ -59,7 +71,15 @@ def test__get_global_variable_value_from_file(shared_datadir, variable, expected
         (True, True, True, 1, pytest.raises(hou.OperationFailed, match="declined")),  # Unsaved, prompt and no save
     ),
 )
-def test_check_unsaved_changes(mocker, mock_hou_ui, has_unsaved, prompt, choice, ui_available, context):
+def test_check_unsaved_changes(
+    mocker: MockerFixture,
+    mock_hou_ui: MagicMock,
+    has_unsaved: bool,
+    prompt: bool,
+    ui_available: bool,
+    choice: int,
+    context: nullcontext[None] | pytest.RaisesExc[hou.OperationFailed],
+) -> None:
     """Test houdini_core_tools.hip_file.check_unsaved_changes()."""
     mocker.patch("hou.isUIAvailable", return_value=ui_available)
     mocker.patch("hou.hipFile.hasUnsavedChanges", return_value=has_unsaved)
@@ -70,7 +90,7 @@ def test_check_unsaved_changes(mocker, mock_hou_ui, has_unsaved, prompt, choice,
     sentinel = mocker.MagicMock()
 
     @hip_file.check_unsaved_changes(prompt=prompt)
-    def test():
+    def test() -> None:
         sentinel()
 
     with context:
@@ -90,7 +110,9 @@ def test_check_unsaved_changes(mocker, mock_hou_ui, has_unsaved, prompt, choice,
         (None, None),
     ),
 )
-def test_get_hip_save_time_from_file(mocker, shared_datadir, hip_name, expected):
+def test_get_hip_save_time_from_file(
+    mocker: MockerFixture, shared_datadir: Path, hip_name: str | None, expected: datetime.datetime | None
+) -> None:
     """Test houdini_core_tools.hip_file.get_hip_save_time_from_file()."""
     mock_value = "Wed Feb  5 05:33:57 2025" if hip_name is not None else None
     mocker.patch("houdini_core_tools.hip_file._get_global_variable_value_from_file", return_value=mock_value)
@@ -113,7 +135,9 @@ def test_get_hip_save_time_from_file(mocker, shared_datadir, hip_name, expected)
         (None, None),
     ),
 )
-def test_get_hip_save_version_from_file(mocker, shared_datadir, hip_name, expected):
+def test_get_hip_save_version_from_file(
+    mocker: MockerFixture, shared_datadir: Path, hip_name: str | None, expected: tuple[int] | None
+) -> None:
     """Test houdini_core_tools.hip_file.get_hip_save_version_from_file()."""
     mock_value = "20.5.493" if hip_name is not None else None
     mocker.patch("houdini_core_tools.hip_file._get_global_variable_value_from_file", return_value=mock_value)
@@ -137,7 +161,7 @@ def test_get_hip_save_version_from_file(mocker, shared_datadir, hip_name, expect
         (None, None),
     ),
 )
-def test_hip_save_time(shared_datadir, hip_name, expected):
+def test_hip_save_time(shared_datadir: Path, hip_name: str | None, expected: datetime.datetime | None) -> None:
     """Test houdini_core_tools.hip_file.hip_save_time()."""
     if hip_name is not None:
         hou.hipFile.load((shared_datadir / hip_name).as_posix(), suppress_save_prompt=True, ignore_load_warnings=True)
@@ -155,7 +179,7 @@ def test_hip_save_time(shared_datadir, hip_name, expected):
         (None, None),
     ),
 )
-def test_hip_save_version(shared_datadir, hip_name, expected):
+def test_hip_save_version(shared_datadir: Path, hip_name: str | None, expected: tuple[int, ...] | None) -> None:
     """Test houdini_core_tools.hip_file.hip_save_version()."""
     if hip_name is not None:
         hou.hipFile.load((shared_datadir / hip_name).as_posix(), suppress_save_prompt=True, ignore_load_warnings=True)
@@ -179,7 +203,7 @@ def test_hip_save_version(shared_datadir, hip_name, expected):
         ("hipname_v3021.hip", "3021"),  # Really large version number
     ],
 )
-def test_hip_version(name, expected):
+def test_hip_version(name: str, expected: str | None) -> None:
     """Test houdini_core_tools.hip_file.hip_version()."""
     hou.hipFile.setName(name)
 
@@ -189,7 +213,7 @@ def test_hip_version(name, expected):
 
 
 @pytest.mark.parametrize("as_str", [False, True])
-def test_save_copy(tmp_path, as_str):
+def test_save_copy(tmp_path: Path, as_str: bool) -> None:
     """Test houdini_core_tools.hip_file.save_copy()."""
     current_name = hou.hipFile.name()
 
@@ -200,7 +224,7 @@ def test_save_copy(tmp_path, as_str):
 
     hip_file.save_copy(target_path)
 
-    assert os.path.exists(target_path)  # noqa: PTH110
+    assert pathlib.Path(target_path).exists()
 
     # Try to verify that the file wasn't added to the recent files list.
     try:
@@ -228,7 +252,7 @@ def test_save_copy(tmp_path, as_str):
         (1001.0, 1010.0, 1000.0, 1001.0),  # Current frame < new range
     ],
 )
-def test_set_frame_range(start, end, current, expected):
+def test_set_frame_range(start: float, end: float, current: float, expected: float | None) -> None:
     """Test houdini_core_tools.hip_file.set_frame_range()."""
     hou.setFrame(current)
 

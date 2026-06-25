@@ -6,13 +6,16 @@ import pytest
 # Houdini Core Tools
 import houdini_core_tools.ui.opmenu
 
+# Houdini
+import hou
+
 pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 
 
 # Tests
 
 
-def test_create_absolute_reference_copy(obj_test_node):
+def test_create_absolute_reference_copy(obj_test_node: hou.ObjNode) -> None:
     """Test houdini_core_tools.ui.opmenu.create_absolute_reference_copy()."""
     scriptargs = {"node": obj_test_node}
 
@@ -23,7 +26,7 @@ def test_create_absolute_reference_copy(obj_test_node):
     assert result.parm("scale").expression() == f'ch("{obj_test_node.path()}/scale")'
 
 
-def test_unlock_parents(obj_test_node):
+def test_unlock_parents(obj_test_node: hou.ObjNode) -> None:
     """Test houdini_core_tools.ui.opmenu.unlock_parents()."""
     test_node = obj_test_node.node("unlock_parents_inner_container/TEST")
 
@@ -37,7 +40,7 @@ def test_unlock_parents(obj_test_node):
     assert not test_node.isInsideLockedHDA()
 
 
-def test_unlock_parents_context(obj_test_node):
+def test_unlock_parents_context(obj_test_node: hou.ObjNode) -> None:
     """Test houdini_core_tools.ui.opmenu.unlock_parents_context()."""
     test_node = obj_test_node.node("locked/unlock_parents_inner_container")
 

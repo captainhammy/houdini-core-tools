@@ -1,5 +1,8 @@
 """Functions related to Houdini node types."""
 
+# Future
+from __future__ import annotations
+
 # Houdini
 import hou
 
@@ -23,7 +26,7 @@ def get_node_type_tool(node_or_node_type: hou.Node | hou.NodeType) -> hou.Tool |
     tools = hou.shelves.tools()
 
     # Build a tool name string.  Tool names are defined as
-    # OperatorTable_OperatorName. (i.e. sop_sphere, object_geo).
+    # OperatorTable_OperatorName (sop_sphere, object_geo, etc).
     tool_name = f"{node_or_node_type.category().name().lower()}_{node_or_node_type.name()}"
 
     return tools.get(tool_name)
