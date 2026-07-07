@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 # Standard Library
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -114,14 +114,14 @@ class PrimitiveIsRawGeometryError(ValueError):
 class UnexpectedAttributeTypeError(ValueError):
     """Exception for passing an invalid hou.attribType value."""
 
-    def __init__(self, value: Any) -> None:
+    def __init__(self, value: object) -> None:
         super().__init__(f"Expected a hou.attribType value, got {type(value)}")
 
 
 class UnexpectedGroupTypeError(ValueError):
     """Exception for passing an invalid group type value."""
 
-    def __init__(self, value: type[Any]) -> None:
+    def __init__(self, value: type[object]) -> None:
         super().__init__(f"Expected a valid geometry group type, got {value}")
 
 

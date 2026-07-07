@@ -1,5 +1,8 @@
 """Test the houdini_core_tools.math module."""
 
+# Future
+from __future__ import annotations
+
 # Standard Library
 from contextlib import nullcontext
 
@@ -114,7 +117,7 @@ import hou
         ),
     ),
 )
-def test_build_instance_matrix(args, kwargs, expected):
+def test_build_instance_matrix(args: tuple, kwargs: dict, expected: hou.Matrix4) -> None:
     """Test houdini_core_tools.math.build_instance_matrix()."""
     mat = houdini_core_tools.math.build_instance_matrix(*args, **kwargs)
 
@@ -130,7 +133,7 @@ def test_build_instance_matrix(args, kwargs, expected):
         (hou.hmath.identityTransform(), True),
     ),
 )
-def test_matrix_is_identity(mat, expected):
+def test_matrix_is_identity(mat: hou.Matrix3 | hou.Matrix4, expected: bool) -> None:
     """Test houdini_core_tools.math.matrix_is_identity()."""
     assert houdini_core_tools.math.matrix_is_identity(mat) == expected
 
@@ -142,7 +145,7 @@ def test_matrix_is_identity(mat, expected):
         (4, 5, 6),
     ),
 )
-def test_matrix_set_translates(translates):
+def test_matrix_set_translates(translates: hou.Vector3 | tuple[float, float, float]) -> None:
     """Test houdini_core_tools.math.matrix_set_translates()."""
     identity = hou.hmath.identityTransform()
     houdini_core_tools.math.matrix_set_translates(identity, translates)
@@ -154,7 +157,7 @@ def test_matrix_set_translates(translates):
 
 
 @pytest.mark.parametrize("vec,direction,expected", ((hou.Vector3(1, 2, 3), hou.Vector3(0, 0, 15), 3.0),))
-def test_vector_component_along(vec, direction, expected):
+def test_vector_component_along(vec: hou.Vector3, direction: hou.Vector3, expected: float) -> None:
     """Test houdini_core_tools.math.vector_component_along()."""
     assert houdini_core_tools.math.vector_component_along(vec, direction) == expected
 
@@ -169,7 +172,7 @@ def test_vector_component_along(vec, direction, expected):
         ),
     ),
 )
-def test_vector_compute_dual(vec, expected, test_vec):
+def test_vector_compute_dual(vec: hou.Vector3, expected: hou.Matrix3, test_vec: hou.Vector3) -> None:
     """Test houdini_core_tools.math.vector_compute_dual()."""
     result = houdini_core_tools.math.vector_compute_dual(vec)
     assert result == expected
@@ -190,7 +193,7 @@ def test_vector_compute_dual(vec, expected, test_vec):
         (hou.Vector4(-4.0, 5, -0, float("nan")), True),
     ),
 )
-def test_vector_contains_nans(vec, expected):
+def test_vector_contains_nans(vec: tuple | hou.Vector2 | hou.Vector3 | hou.Vector4, expected: bool) -> None:
     """Test houdini_core_tools.math.vector_contains_nans()."""
     result = houdini_core_tools.math.vector_contains_nans(vec)
     assert result == expected
@@ -213,7 +216,12 @@ def test_vector_contains_nans(vec, expected):
         ),
     ),
 )
-def test_vector_project_along(v1, v2, context, expected):
+def test_vector_project_along(
+    v1: hou.Vector3,
+    v2: hou.Vector3,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.VectorIsZeroVectorError],
+    expected: hou.Vector3 | None,
+) -> None:
     """Test houdini_core_tools.math.vector_project_along()."""
     with context:
         result = houdini_core_tools.math.vector_project_along(v1, v2)

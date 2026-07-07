@@ -1,10 +1,85 @@
-[tool.pytest.ini_options]
-    pythonpath = "src"
-    addopts = "--cov --cov-report=html --cov-report=xml --cov-fail-under=100 --color=yes"
+[project]
+name = "houdini_core_tools"
+
+description = "Package providing generic and simple tools for Houdini without external dependencies"
+authors = [
+    {name = "Graham Thompson", email = "captainhammy@gmail.com"}
+]
+
+[dependency-groups]
+    docs = ["sphinx==8", "sphinx-rtd-theme", "sphinx-copybutton", "enum-tools[sphinx]", "sphinx-pyproject", "dunamai"]
+    docstrings = ["pydocstringformatter"]
+    github = ["coverage", "tox"]
+    isort = ["isort"]
+    ruff = ["ruff"]
+    test = ["pytest", "pytest-cov", "pytest-datadir", "pytest-houdini", "pytest-mock"]
+    ty = ["ty"]
+
+[tool.tox]
+    env_list = ["run-tests-rez", "run-tests-json", "ruff-check", "ruff-format-check", "isort-check", "ty", "docstring-check"]
+    labels = {test = ["run-tests-rez", "run-tests-json"], static = ["ruff-check", "ruff-format-check", "isort-check", "ty", "docstring-check"], fix = ["ruff-format-fix", "isort-run", "docstring-run"] }
+    no_package = true
+
+    [tool.tox.env.run-tests-rez]
+        allowlist_externals = ["echo", "rez"]
+        commands = [["rez", "test", "{[project]name}"]]
+        commands_post = [["echo", "View test coverage report at file://{toxinidir}/coverage_html_report/index.html"]]
+
+    [tool.tox.env.run-tests-json]
+        allowlist_externals = ["echo", "hython"]
+        dependency_groups = ["test"]
+        set_env = {PYTHONPATH = "{envsitepackagesdir}", HOUDINI_PACKAGE_DIR = "{toxinidir}"}
+        commands = [["hython", "-m", "pytest", "tests/"]]
+        commands_post = [["echo", "View test coverage report at file://{toxinidir}/coverage_html_report/index.html"]]
+
+    [tool.tox.env.ruff-check]
+        dependency_groups = ["ruff"]
+        commands = [[ "ruff", "check", "--preview", "src/", "tests/"]]
+
+    [tool.tox.env.ruff-format-check]
+        dependency_groups = ["ruff"]
+        commands = [[ "ruff", "format", "--preview", "--check", "--diff", "src/", "tests/"]]
+
+    [tool.tox.env.ruff-format-fix]
+        dependency_groups = ["ruff"]
+        commands = [[ "ruff", "format", "--preview", "src/", "tests/"]]
+
+    [tool.tox.env.isort-check]
+        dependency_groups = ["isort"]
+        commands = [[ "isort", "--check", "src/", "tests/"]]
+
+    [tool.tox.env.isort-run]
+        dependency_groups = ["isort"]
+        commands = [[ "isort", "src/", "tests/"]]
+
+    [tool.tox.env.ty]
+        dependency_groups = ["ty", "test"]
+        commands = [[ "ty", "check", "src/python/", "tests/"]]
+
+    [tool.tox.env.docstring-check]
+        dependency_groups = ["docstrings"]
+        commands = [[ "pydocstringformatter", "--exit-code", "src/"]]
+
+    [tool.tox.env.docstring-run]
+        dependency_groups = ["docstrings"]
+        commands = [[ "pydocstringformatter", "--write", "src/"]]
+
+    [tool.tox.env.docs]
+        basepython = "python3.12"
+        allowlist_externals = ["echo"]
+        dependency_groups = ["docs"]
+        commands = [
+            ["sphinx-apidoc", "-o", "docs/api", "src/python"],
+            ["sphinx-build", "-b", "html", "-d", "{envtmpdir}/doctrees", "docs/", "{envtmpdir}/html"]
+        ]
+        commands_post = [["echo", "Docs available at file://{envtmpdir}/html/index.html"]]
+
+[tool.pytest]
+    addopts = ["--cov", "--cov-report=html", "--cov-report=xml", "--cov-fail-under=100", "--color=yes"]
 
 [tool.isort]
     profile = "black"
-    src_paths = ["src/python"]
+    src_paths = ["src/python", "tests"]
     known_houdini = ["EC2", "alignutils", "assetauthortools", "assetdownload", "autorig", "autorigs", "bakeanimation", "baseinfowindow", "bookish", "bvhviewer", "canvaseventtypes", "channelwranglesnippet", "charactertoolutils", "charpicker", "chopnettoolutils", "choptoolutils", "cloud", "cloudEULA", "cloudsubmit", "cloudtoolutils", "colorschemeutils", "contextoptions", "cop2toolutils", "copnettoolutils", "crowds", "crowdstoolutils", "dbg", "defaultstatetools", "defaulttoolmenus", "defaulttools", "digitalassetsupport", "displaymessage", "dopclothproxy", "dopclothtoolutils", "dopfemtoolutils", "dopgeofiltertoolutils", "dopinstance", "dopparticlefluidtoolutils", "doppoptoolutils", "doppyrotoolutils", "doprbdtoolutils", "dopreltoolutils", "dopsbdtoolutils", "dopsmoketoolutils", "dopsparsepyrotools", "dopstatictoolutils", "doptoolutils", "dopwiretoolutils", "dragdroputils", "drivertoolutils", "expression_functions", "expressionmenu", "fileutils", "furtoolutils", "furutils", "gasresizedynamic", "generateHDAToolsForOTL", "generate_proto", "handleutils", "hapi", "hdefereval", "hjson", "hjsonrpc", "hotkeys", "hou", "houdiniInterpreter", "houdiniengineutils", "houdinihelp", "houdiniinternals", "houpythonportion", "houxmlrpc", "hqrop", "hqueue", "hrpyc", "hscp", "husd", "husdoutputprocessors", "husdshadertranslators", "husdui", "husktrace", "hutil", "hwebserver", "images2gif", "inlinecpp", "insertionpointutils", "introspect", "lightlinker", "lightmixer", "lightstate", "loadHelpcardOTLExample", "lopcamutils", "lopedit", "loplightandcamutils", "lopshaderutils", "loptoolutils", "loputils", "mantra", "materiallinker", "metaexpr", "modelview", "mssbuild", "muscletoolutils", "mvexportutils", "nodegraph", "nodegraphalign", "nodegraphautoscroll", "nodegraphbase", "nodegraphconnect", "nodegraphdisplay", "nodegraphdispopts", "nodegraphedittext", "nodegraphfastfind", "nodegraphflags", "nodegraphfurutils", "nodegraphgestures", "nodegraphhotkeys", "nodegraphinfo", "nodegraphlayout", "nodegraphpalettes", "nodegraphpopupmenus", "nodegraphprefs", "nodegraphquicknav", "nodegraphrename", "nodegraphselectpos", "nodegraphselectposhooks", "nodegraphsnap", "nodegraphstates", "nodegraphtitle", "nodegraphtopui", "nodegraphui", "nodegraphutils", "nodegraphvellumutils", "nodegraphview", "nodepresets", "nodesearch", "nodeselectionutil", "nodethemes", "nodeutils", "objecttoolutils", "opnode_sum", "optixdownload", "paginate", "parmutils", "parsepeakuserlog", "particletoolutils", "pdg", "pdgd", "pdgdatalayer", "pdgjob", "pdgpathmap", "pdgservicepanel", "pdgstateserver", "pdgutils", "perfmon_sum", "pluginutils", "poselib", "posespacedeform", "poster", "pygmentshighlighter", "pyro2", "pythonscriptmenu", "quickplanes", "radialmenu", "rendertracker", "resourceutils", "rigtoolutils", "rmands", "roptoolutils", "sas", "scenegraphdetails", "scenegraphlayers", "shadingutils", "shelfutils", "shopclerks", "shoptoolutils", "sidefxlabs", "simtracker", "skytoolutils", "snippetmenu", "soptoolutils", "soputils", "stagemanager", "stateutils", "stroketoolutils", "taskgraphtable", "taskgraphtablepanel", "terraintoolutils", "toolprompts", "toolutils", "top", "topnettoolutils", "toptoolutils", "uiutils", "usdinlinelayermenu", "usdprimicons", "usdrenderers", "usdroputils", "vexpressionmenu", "viewerhandle", "viewerstate", "volumetoolutils", "vopcallbacks", "vopfxmenu", "vopnettoolutils", "voptoolutils", "webapiclient", "Alfred", "AlfredRun", "HQrender", "HQsim", "IFD", "IFDapi", "IFDarchive", "IFDframe", "IFDgeo", "IFDhooks", "IFDmantra", "IFDmisc", "IFDsettings", "OGL", "RIB", "RIBapi", "RIBapiprman", "RIBapiprmantext", "RIBapisoho", "RIBarchive", "RIBframe", "RIBgeo", "RIBhooks", "RIBmisc", "RIBparm", "RIBprman21.0", "RIBptinst", "RIBsettings", "RIBsohogeo", "SOHOcommon", "debug", "dsmmerge", "hbrickmap", "soho", "sohog", "sohoglue", "wranglers", "wren"]
     sections = "FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER,HOUDINI"
     import_heading_future = "Future"
@@ -15,54 +90,30 @@
     dedup_headings = true
     indented_import_headings = false
 
-[tool.mypy]
-    disallow_incomplete_defs = true
-    disallow_untyped_calls = true
-    disallow_untyped_defs = true
-    files = "src"
-    mypy_path = "src"
-    ignore_missing_imports = true
+[tool.ty]
+    [tool.ty.analysis]
+        allowed-unresolved-imports = ["hou", "nodegraphtitle"]
 
-    [[tool.mypy.overrides]]
-        module = "hou.*"
-        ignore_missing_imports = true
-
+    [tool.ty.environment]
+        root = ["src/python"]
 
 [tool.coverage]
-    [tool.coverage.run]
-        branch = true
-        source =  ["houdini_core_tools"]
-        omit = [
-            "*version.py",
-        ]
-        disable_warnings = [
-            "module-not-imported",
-            "module-not-measured",
-        ]
+    [tool.coverage.html]
+        directory = "coverage_html_report"
 
     [tool.coverage.report]
         exclude_lines = [
             # Have to re-enable the standard pragma
             "pragma: no cover",
-
-            # Don't complain about missing debug-only code:
             "def __repr__",
-            "if self.debug",
             "if TYPE_CHECKING",
-
-            # Don't complain if tests don't hit defensive assertion code:
-            "raise AssertionError",
-            "raise NotImplementedError",
-
-            # Don't complain if non-runnable code isn't run:
-            "if 0:",
-            "if __name__ == .__main__.:",
         ]
         ignore_errors = true
         skip_empty = true
 
-    [tool.coverage.html]
-        directory = "coverage_html_report"
+    [tool.coverage.run]
+        branch = true
+        source =  ["houdini_core_tools"]
 
 [tool.pydocstringformatter]
     max-summary-lines = 2
@@ -89,6 +140,8 @@
             "LOG",  #  flake8-logging
             "BLE",  # flake8-blind-except
             "A",  # flake8-builtins
+            "ANN",  # flake8-annotations
+            "Q",  # flake8-quotes
             "C4",  # flake8-comprehensions
             "RET",  # flake8-return
             "SIM",  # flake8-simplify
@@ -103,6 +156,9 @@
             "D104",  # Missing docstring in public module
             "D105",  # Missing docstring in magic method
             "D107",  # Missing docstring in __init__
+            "DTZ001",  # Datetime without tzinfo
+            "DTZ007",  # strptime without tzinfo
+            "I001",  # Import ordering
         ]
 
     [tool.ruff.lint.per-file-ignores]
@@ -110,12 +166,13 @@
             "A005",  # Module name shadowing builtin
         ]
         "tests/*.py" = [
+            "FBT001",  # Boolean type hint
             "FBT003",  # Boolean positional
+            "N999",  # Invalid module name
             "PLR0913",  # Too many arguments in function definition
             "PLR0917",  # Too many positional arguments
             "PLR2004",  # Magic value in comparison
             "PLR6301",  # 'no-self-use' for tests
-            "PT004",  # Fixtures not returning anything not starting with _
             "PT006",  # Expected tuple of parameter names instead of string
             "PT007",  # Expected `list` instead of `tuple` for parametrized fixtures
             "PT012",  # pytest.raises() simple statement

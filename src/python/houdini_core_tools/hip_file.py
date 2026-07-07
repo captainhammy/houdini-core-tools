@@ -23,7 +23,7 @@ def _get_global_variable_value_from_file(hip_file: pathlib.Path, variable_name: 
     """Parse a hip file and attempt to determine a global variable value.
 
     This will quickly check the start of the file for the definition of the
-    global variable name global variable and return its value if found.
+    global variable name and return its value if found.
 
     Args:
         hip_file: The hip file to parse.
@@ -34,10 +34,10 @@ def _get_global_variable_value_from_file(hip_file: pathlib.Path, variable_name: 
     """
     version = None
 
-    # We need to ignore errors otherwise the magic bits in the hip file will cause
-    # failures. Those don't occur on lines we care about so it's safe to ignore them.
+    # We need to ignore errors, otherwise the magic bits in the hip file will cause
+    # failures. Those don't occur on lines we care about, so it's safe to ignore them.
     with hip_file.open("r", encoding="utf-8", errors="ignore") as handle:
-        # Sentinel to know if we've found any global variable definitions yet.
+        # Sentinel to know if we've not found any global variable definitions yet.
         found_globals = False
 
         while line := handle.readline():  # pragma: no branch
@@ -54,7 +54,7 @@ def _get_global_variable_value_from_file(hip_file: pathlib.Path, variable_name: 
                     break
 
             # If we didn't find a global variable definition on the line but have found some
-            # previously then we are done and should stop reading the file.
+            # previously, then we are done and should stop reading the file.
             elif found_globals:
                 break
 
@@ -74,9 +74,9 @@ def check_unsaved_changes(*, prompt: bool = False) -> Callable:
         The wrapped function.
     """
 
-    def decorator(func):  # type: ignore
+    def decorator(func):  # noqa:ANN001,ANN202
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):  # type: ignore
+        def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
             if hou.hipFile.hasUnsavedChanges():
                 if hou.isUIAvailable() and prompt:
                     choice = hou.ui.displayCustomConfirmation(
@@ -218,7 +218,7 @@ def save_copy(file_path: str | pathlib.Path) -> None:
 def set_frame_range(start: float, end: float) -> None:
     """Set the current frame range.
 
-    If the current frame is not within the new range it will be updated to the
+    If the current frame is not within the new range, it will be updated to the
     start frame.
 
     Args:

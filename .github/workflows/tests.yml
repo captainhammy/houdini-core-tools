@@ -20,7 +20,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup licensing
         uses: captainhammy/setup-hserver-action@v1
@@ -30,11 +30,11 @@ jobs:
           client_secret_key: ${{ secrets.SESI_SECRET_KEY }}
 
       - name: Install execution dependencies
-        run: python3 -m pip install tox tox-gh-actions coverage
+        run: python3 -m pip install --group "github"
 
-      # Run tox tests (unit tests + static code analysis)
+      # Run static analysis tox tests
       - name: Test with tox
-        run: tox
+        run: tox -m static
 
       # Build package for rez testing
       - name: Build Package
@@ -53,10 +53,11 @@ jobs:
         # the libs will otherwise be installed in the system location where Houdini
         # won't load things from.
         run: |
-          hython -m pip install -r test_requirements.txt
+          hython -m pip install --upgrade pip
+          hython -m pip install --group "test"
           hython -m pytest tests/
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

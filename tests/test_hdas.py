@@ -1,7 +1,11 @@
 """Test the houdini_core_tools.hdas module."""
 
+# Future
+from __future__ import annotations
+
 # Standard Library
 import pathlib
+from typing import TYPE_CHECKING
 
 # Third Party
 import pytest
@@ -12,13 +16,17 @@ import houdini_core_tools.hdas
 # Houdini
 import hou
 
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+
 pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 
 
 # Tests
 
 
-def test__filter_houdini_install_files():
+def test__filter_houdini_install_files() -> None:
     """Test houdini_core_tools.hdas._filter_houdini_install_files()."""
     loaded_files = hou.hda.loadedFiles()
     assert any(hda_file.startswith(houdini_core_tools.hdas._HOUDINI_INSTALL_DIR) for hda_file in loaded_files)
@@ -32,7 +40,7 @@ def test__filter_houdini_install_files():
     "raise_exception",
     (False, True),
 )
-def test_get_embedded_asset_definitions(mocker, raise_exception):
+def test_get_embedded_asset_definitions(mocker: MockerFixture, raise_exception: bool) -> None:
     """Test houdini_core_tools.hdas.get_embedded_asset_definitions()."""
     if raise_exception:
         mocker.patch("hou.hda.definitionsInFile", side_effect=hou.OperationFailed)
@@ -51,7 +59,7 @@ def test_get_embedded_asset_definitions(mocker, raise_exception):
         (True, 10),
     ),
 )
-def test_get_in_use_hda_definitions(include_hfs, expected_count):
+def test_get_in_use_hda_definitions(include_hfs: bool, expected_count: int) -> None:
     """Test houdini_core_tools.hdas.get_in_use_hda_definitions()."""
     result = houdini_core_tools.hdas.get_in_use_hda_definitions(include_hfs=include_hfs)
     assert len(result) == expected_count
@@ -67,7 +75,7 @@ def test_get_in_use_hda_definitions(include_hfs, expected_count):
         (True, 6),  # There are 5 HFS HDAs + the other external ref.
     ),
 )
-def test_get_in_use_hda_files(include_hfs, expected_count):
+def test_get_in_use_hda_files(include_hfs: bool, expected_count: int) -> None:
     """Test houdini_core_tools.hdas.get_in_use_hda_files()."""
     result = houdini_core_tools.hdas.get_in_use_hda_files(include_hfs=include_hfs)
     assert len(result) == expected_count
@@ -84,7 +92,7 @@ def test_get_in_use_hda_files(include_hfs, expected_count):
         ("not_otl", None),
     ),
 )
-def test_get_node_descriptive_parameter(obj_test_node, node_name, expected_parm):
+def test_get_node_descriptive_parameter(obj_test_node: hou.ObjNode, node_name: str, expected_parm: str | None) -> None:
     """Test houdini_core_tools.hdas.get_node_descriptive_parameter()."""
     node = obj_test_node.node(node_name)
 
@@ -101,7 +109,7 @@ def test_get_node_descriptive_parameter(obj_test_node, node_name, expected_parm)
         ("not_otl", None),
     ),
 )
-def test_get_node_dive_target(obj_test_node, node_name, expected_node):
+def test_get_node_dive_target(obj_test_node: hou.ObjNode, node_name: str, expected_node: str | None) -> None:
     """Test houdini_core_tools.hdas.get_node_dive_target()."""
     node = obj_test_node.node(node_name)
 
@@ -118,7 +126,7 @@ def test_get_node_dive_target(obj_test_node, node_name, expected_node):
         ("not_otl", None),
     ),
 )
-def test_get_node_editable_nodes(obj_test_node, node_name, expected_node):
+def test_get_node_editable_nodes(obj_test_node: hou.ObjNode, node_name: str, expected_node: str | None) -> None:
     """Test houdini_core_tools.hdas.get_node_editable_nodes()."""
     node = obj_test_node.node(node_name)
 
@@ -136,7 +144,7 @@ def test_get_node_editable_nodes(obj_test_node, node_name, expected_node):
         ("not_otl", None),
     ),
 )
-def test_get_node_guide_geometry_node(obj_test_node, node_name, expected_node):
+def test_get_node_guide_geometry_node(obj_test_node: hou.ObjNode, node_name: str, expected_node: str | None) -> None:
     """Test houdini_core_tools.hdas.get_node_guide_geometry_node()."""
     node = obj_test_node.node(node_name)
 
@@ -153,7 +161,7 @@ def test_get_node_guide_geometry_node(obj_test_node, node_name, expected_node):
         ("not_otl", None),
     ),
 )
-def test_get_node_message_nodes(obj_test_node, node_name, expected_node):
+def test_get_node_message_nodes(obj_test_node: hou.ObjNode, node_name: str, expected_node: str | None) -> None:
     """Test houdini_core_tools.hdas.get_node_message_nodes()."""
     node = obj_test_node.node(node_name)
 
@@ -171,7 +179,7 @@ def test_get_node_message_nodes(obj_test_node, node_name, expected_node):
         ("geo/solver", None),
     ),
 )
-def test_get_node_representative_node(obj_test_node, node_name, expected_node):
+def test_get_node_representative_node(obj_test_node: hou.ObjNode, node_name: str, expected_node: str | None) -> None:
     """Test houdini_core_tools.hdas.get_node_representative_node()."""
     node = obj_test_node.node(node_name)
 
@@ -187,7 +195,7 @@ def test_get_node_representative_node(obj_test_node, node_name, expected_node):
         ("not_digital_asset", False),
     ),
 )
-def test_is_digital_asset(obj_test_node, node_name, expected):
+def test_is_digital_asset(obj_test_node: hou.ObjNode, node_name: str, expected: bool) -> None:
     """Test houdini_core_tools.hdas.is_digital_asset()."""
     node = obj_test_node.node(node_name)
 

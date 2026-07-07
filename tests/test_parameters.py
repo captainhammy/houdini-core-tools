@@ -1,6 +1,7 @@
 """Test the houdini_core_tools.parameters module."""
 
 # Standard Library
+import contextlib
 from contextlib import nullcontext
 
 # Third Party
@@ -19,7 +20,7 @@ pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 # Tests
 
 
-def test__get_names_in_folder(obj_test_node):
+def test__get_names_in_folder(obj_test_node: hou.ObjNode) -> None:
     """Test houdini_core_tools.parameters._get_names_in_folder()."""
     node = obj_test_node.node("null")
     parm_template = node.parm("base").parmTemplate()
@@ -38,16 +39,20 @@ def test__get_names_in_folder(obj_test_node):
 
 
 @pytest.mark.parametrize(
-    "name, indices, ctx",
+    "name, indices, context",
     [
         ("foo#_#", (1,), pytest.raises(exceptions.NotEnoughMultiParmIndicesError)),  # Test with not enough indices.
         ("foo#_#", (1, 2), nullcontext()),
         ("foo#_#", (1, 2, 3), nullcontext()),  # Test with more than enough indices.
     ],
 )
-def test__validate_multiparm_resolve_values(name, indices, ctx):
+def test__validate_multiparm_resolve_values(
+    name: str,
+    indices: tuple[int, ...],
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.NotEnoughMultiParmIndicesError],
+) -> None:
     """Test houdini_core_tools.parameters._validate_multiparm_resolve_values()."""
-    with ctx:
+    with context:
         houdini_core_tools.parameters._validate_multiparm_resolve_values(name, indices)
 
 
@@ -71,7 +76,14 @@ def test__validate_multiparm_resolve_values(name, indices, ctx):
         ("string#", 1, True, nullcontext(), "test_parameters"),
     ),
 )
-def test_eval_multiparm_instance(obj_test_node, name, indices, raw, context, expected):
+def test_eval_multiparm_instance(
+    obj_test_node: hou.ObjNode,
+    name: str,
+    indices: int | tuple[int, ...],
+    raw: bool,
+    context: nullcontext[None] | pytest.RaisesExc,
+    expected: float | str | tuple | None,
+) -> None:
     """Test houdini_core_tools.parameters.eval_multiparm_instance()."""
     node = obj_test_node.node("null")
 
@@ -89,7 +101,12 @@ def test_eval_multiparm_instance(obj_test_node, name, indices, raw, context, exp
         ("strip_toggle", nullcontext(), (True, False, True, True)),
     ),
 )
-def test_eval_parm_as_strip(obj_test_node, parm_name, context, expected):
+def test_eval_parm_as_strip(
+    obj_test_node: hou.ObjNode,
+    parm_name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.ParameterNotAButtonStripError],
+    expected: tuple[bool, ...] | None,
+) -> None:
     """Test houdini_core_tools.parameters.eval_parm_as_strip()."""
     parm = obj_test_node.parm(f"node/{parm_name}")
 
@@ -104,7 +121,7 @@ def test_eval_parm_as_strip(obj_test_node, parm_name, context, expected):
         ("strip_toggle", ("foo", "hello", "world")),  # Toggle strip.
     ),
 )
-def test_eval_parm_strip_as_string(obj_test_node, parm_name, expected):
+def test_eval_parm_strip_as_string(obj_test_node: hou.ObjNode, parm_name: str, expected: tuple[str, ...]) -> None:
     """Test houdini_core_tools.parameters.eval_parm_strip_as_string()."""
     parm = obj_test_node.parm(f"node/{parm_name}")
 
@@ -118,7 +135,12 @@ def test_eval_parm_strip_as_string(obj_test_node, parm_name, expected):
         ("node/not_color", pytest.raises(exceptions.ParmTupleTypeError, match=r".+ color chooser.+"), None),
     ),
 )
-def test_eval_parm_tuple_as_color(obj_test_node, parm_name, context, expected):
+def test_eval_parm_tuple_as_color(
+    obj_test_node: hou.ObjNode,
+    parm_name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.ParmTupleTypeError],
+    expected: hou.Color | None,
+) -> None:
     """Test houdini_core_tools.parameters.eval_parm_tuple_as_color()."""
     parm = obj_test_node.parmTuple(parm_name)
 
@@ -135,7 +157,12 @@ def test_eval_parm_tuple_as_color(obj_test_node, parm_name, context, expected):
         ("node/not_vec", pytest.raises(exceptions.ParmTupleTypeError, match=r".+ vector.+"), None),
     ),
 )
-def test_eval_parm_tuple_as_vector(obj_test_node, parm_name, context, expected):
+def test_eval_parm_tuple_as_vector(
+    obj_test_node: hou.ObjNode,
+    parm_name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.ParmTupleTypeError],
+    expected: hou.Vector2 | hou.Vector3 | hou.Vector4 | None,
+) -> None:
     """Test houdini_core_tools.parameters.eval_parm_tuple_as_vector()."""
     parm = obj_test_node.parmTuple(parm_name)
 
@@ -153,7 +180,9 @@ def test_eval_parm_tuple_as_vector(obj_test_node, parm_name, context, expected):
         ("find_locked_hda_parent/test_node/test_parent_parm", "test_parent_parm", False),
     ),
 )
-def test_find_matching_parent_parm(obj_test_node, parm_name, expected, stop_at_locked):
+def test_find_matching_parent_parm(
+    obj_test_node: hou.ObjNode, parm_name: str, expected: str | None, stop_at_locked: bool
+) -> None:
     """Test houdini_core_tools.parameters.find_matching_parent_parm()."""
     parm = obj_test_node.parm(parm_name)
 
@@ -241,7 +270,7 @@ def test_find_matching_parent_parm(obj_test_node, parm_name, expected, stop_at_l
         ("$F4", ("/out/mantra1/vm_picture",)),
     ),
 )
-def test_find_parameters_using_variable(varname, expected_parms):
+def test_find_parameters_using_variable(varname: str, expected_parms: tuple[str, ...]) -> None:
     """Test houdini_core_tools.parameters.find_parameters_using_variable()."""
     parms = {hou.parm(name) for name in expected_parms if hou.parm(name) is not None}
 
@@ -259,7 +288,7 @@ def test_find_parameters_using_variable(varname, expected_parms):
         ("renders", ("/obj/geo1/font2/text",)),
     ),
 )
-def test_find_parameters_with_value(value, expected):
+def test_find_parameters_with_value(value: str, expected: tuple[str, ...]) -> None:
     """Test houdini_core_tools.parameters.find_parameters_with_value()."""
     result = houdini_core_tools.parameters.find_parameters_with_value(value)
     assert result == tuple(hou.parm(value) for value in expected)
@@ -273,7 +302,7 @@ def test_find_parameters_with_value(value, expected):
         ("bottom#_#_#", ("deepest#_#", "inner#", "base")),
     ),
 )
-def test_get_multiparm_containing_folders(obj_test_node, name, expected):
+def test_get_multiparm_containing_folders(obj_test_node: hou.ObjNode, name: str, expected: tuple[str, ...]) -> None:
     """Test houdini_core_tools.parameters.get_multiparm_containing_folders()."""
     node = obj_test_node.node("null")
 
@@ -292,7 +321,7 @@ def test_get_multiparm_containing_folders(obj_test_node, name, expected):
         ("bottom#_#_#", (0, 1, 2)),
     ),
 )
-def test_get_multiparm_container_offsets(obj_test_node, name, expected):
+def test_get_multiparm_container_offsets(obj_test_node: hou.ObjNode, name: str, expected: tuple[int, ...]) -> None:
     """Test houdini_core_tools.parameters.get_multiparm_container_offsets()."""
     node = obj_test_node.node("null")
 
@@ -301,7 +330,7 @@ def test_get_multiparm_container_offsets(obj_test_node, name, expected):
     assert houdini_core_tools.parameters.get_multiparm_container_offsets(name, ptg) == expected
 
 
-def test_get_multiparm_siblings(obj_test_node):
+def test_get_multiparm_siblings(obj_test_node: hou.ObjNode) -> None:
     """Test houdini_core_tools.parameters.get_multiparm_siblings()."""
     node = obj_test_node.node("null")
     parm = node.parm("base")
@@ -345,7 +374,12 @@ def test_get_multiparm_siblings(obj_test_node):
         ("multi2", nullcontext(), 2),  # Parameter with default of 2, stored in tag.
     ),
 )
-def test_get_multiparm_start_offset(obj_test_node, parm_name, context, expected):
+def test_get_multiparm_start_offset(
+    obj_test_node: hou.ObjNode,
+    parm_name: str,
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.InvalidAttributeTypeError],
+    expected: int | None,
+) -> None:
     """Test houdini_core_tools.parameters.get_multiparm_start_offset()."""
     parm_template = obj_test_node.parm(f"null/{parm_name}").parmTemplate()
 
@@ -362,7 +396,7 @@ def test_get_multiparm_start_offset(obj_test_node, parm_name, context, expected)
         ("leaf1_3", "leaf#_#"),
     ),
 )
-def test_get_multiparm_template_name(obj_test_node, parm_name, expected):
+def test_get_multiparm_template_name(obj_test_node: hou.ObjNode, parm_name: str, expected: str | None) -> None:
     """Test houdini_core_tools.parameters.get_multiparm_template_name()."""
     node = obj_test_node.node("null")
 
@@ -387,7 +421,7 @@ def test_get_multiparm_template_name(obj_test_node, parm_name, expected):
         ("multi_tab", True),
     ),
 )
-def test_is_parm_multiparm(obj_test_node, parm_name, expected):
+def test_is_parm_multiparm(obj_test_node: hou.ObjNode, parm_name: str, expected: bool) -> None:
     """Test houdini_core_tools.parameters.is_parm_multiparm()."""
     parm = obj_test_node.parm(f"object_merge/{parm_name}")
     assert houdini_core_tools.parameters.is_parm_multiparm(parm) == expected
@@ -406,7 +440,7 @@ def test_is_parm_multiparm(obj_test_node, parm_name, expected):
         ("multitab", True),
     ),
 )
-def test_is_parm_template_multiparm_folder(obj_test_node, parm_name, expected):
+def test_is_parm_template_multiparm_folder(obj_test_node: hou.ObjNode, parm_name: str, expected: bool) -> None:
     """Test houdini_core_tools.parameters.is_parm_template_multiparm_folder()."""
     parm_template = obj_test_node.parm(f"null/{parm_name}").parmTemplate()
 
@@ -420,7 +454,7 @@ def test_is_parm_template_multiparm_folder(obj_test_node, parm_name, expected):
         ("color", True),
     ),
 )
-def test_is_parm_tuple_color(obj_test_node, parm_name, expected):
+def test_is_parm_tuple_color(obj_test_node: hou.ObjNode, parm_name: str, expected: bool) -> None:
     """Test houdini_core_tools.parameters.is_parm_tuple_color()."""
     parm = obj_test_node.parmTuple(f"node/{parm_name}")
 
@@ -434,7 +468,7 @@ def test_is_parm_tuple_color(obj_test_node, parm_name, expected):
         ("vec", True),
     ),
 )
-def test_is_parm_tuple_vector(obj_test_node, parm_name, expected):
+def test_is_parm_tuple_vector(obj_test_node: hou.ObjNode, parm_name: str, expected: bool) -> None:
     """Test houdini_core_tools.parameters.is_parm_tuple_vector()."""
     parm = obj_test_node.parmTuple(f"node/{parm_name}")
 
@@ -457,7 +491,12 @@ def test_is_parm_tuple_vector(obj_test_node, parm_name, expected):
         ("test#_#", [5], pytest.raises(exceptions.NotEnoughMultiParmIndicesError), None),
     ),
 )
-def test_resolve_multiparm_tokens(name, tokens, context, expected):
+def test_resolve_multiparm_tokens(
+    name: str,
+    tokens: int | list[int],
+    context: nullcontext[None] | pytest.RaisesExc[exceptions.InvalidAttributeTypeError],
+    expected: str | None,
+) -> None:
     """Test houdini_core_tools.parameters.resolve_multiparm_tokens()."""
     with context:
         assert houdini_core_tools.parameters.resolve_multiparm_tokens(name, tokens) == expected
@@ -480,7 +519,14 @@ def test_resolve_multiparm_tokens(name, tokens, context, expected):
         ("nested_string#_#", (1, 1), True, nullcontext(), ("$JOB", "$TEMP")),
     ),
 )
-def test_unexpanded_string_multiparm_instance(obj_test_node, name, indices, raw, context, expected):
+def test_unexpanded_string_multiparm_instance(
+    obj_test_node: hou.ObjNode,
+    name: str,
+    indices: int,
+    raw: bool,
+    context: contextlib.AbstractContextManager | pytest.RaisesExc[BaseException],
+    expected: tuple | None,
+) -> None:
     """Test houdini_core_tools.parameters.unexpanded_string_multiparm_instance()."""
     node = obj_test_node.node("null")
 

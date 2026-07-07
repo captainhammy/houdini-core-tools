@@ -55,7 +55,7 @@ def _find_parameters_with_value(target_value: str, check_func: Callable) -> tupl
                 with contextlib.suppress(hou.OperationFailed):
                     value = parm.expression()
 
-            # If we got a value and the checking function detects a match then
+            # If we got a value and the checking function detects a match, then
             # we'll return that parameter
             if value and check_func(value, target_value):
                 parms_with_value.append(parm)
@@ -78,7 +78,7 @@ def _get_names_in_folder(parent_template: hou.FolderParmTemplate) -> tuple[str, 
 
     for parm_template in parent_template.parmTemplates():
         if isinstance(parm_template, hou.FolderParmTemplate):
-            # If the template is a folder (but not a multiparm folder) then we
+            # If the template is a folder (but not a multiparm folder), then we
             # need to get the parms inside it as well since they are technically siblings.
             if not is_parm_template_multiparm_folder(parm_template):
                 names.extend(_get_names_in_folder(parm_template))
@@ -109,7 +109,7 @@ def _validate_multiparm_resolve_values(name: str, indices: Sequence[int]) -> Non
     token_count = name.count("#")
 
     # Ensure that there are enough indices for the name.  Houdini can handle too many
-    # indices but if there are not enough it won't like that and return an unexpected value.
+    # indices, but if there is not enough, it won't like that and return an unexpected value.
     if token_count > len(indices):
         raise exceptions.NotEnoughMultiParmIndicesError(name, token_count, len(indices))
 
@@ -120,7 +120,7 @@ def _validate_multiparm_resolve_values(name: str, indices: Sequence[int]) -> Non
 def eval_multiparm_instance(
     node: hou.OpNode,
     name: str,
-    indices: list[int] | tuple[int] | int,
+    indices: Sequence[int] | int,
     *,
     raw_indices: bool = False,
 ) -> tuple | float | str | hou.Ramp:
@@ -165,14 +165,14 @@ def eval_multiparm_instance(
         raise exceptions.NoMatchingParameterTemplate(name, node)
 
     # Handle directly passing a single index.
-    if not isinstance(indices, (list, tuple)):
+    if isinstance(indices, int):
         indices = [indices]
 
     if not raw_indices:
         offsets = get_multiparm_container_offsets(name, ptg)
 
         # Adjust any supplied offsets with the multiparm offset.
-        indices = [idx + offset for idx, offset in zip(indices, offsets)]
+        indices = [idx + offset for idx, offset in zip(indices, offsets, strict=True)]
 
     # Validate that enough indices were passed.
     _validate_multiparm_resolve_values(name, indices)
@@ -214,7 +214,7 @@ def eval_parm_as_strip(parm: hou.Parm) -> tuple[bool, ...]:
     if not isinstance(parm_template, hou.MenuParmTemplate) or not parm_template.isButtonStrip():
         raise exceptions.ParameterNotAButtonStripError(parm)
 
-    # Get the value.  This might be the selected index, or a bit mask if we
+    # Get the value.  This might be the selected index or a bit mask if we
     # can select more than one.
     value = parm.eval()
 
@@ -222,8 +222,8 @@ def eval_parm_as_strip(parm: hou.Parm) -> tuple[bool, ...]:
     num_items = len(parm_template.menuItems())
     values = [False] * num_items
 
-    # If our menu type is a Toggle that means we can select more than one
-    # item at the same time so our value is really a bit mask.
+    # If our menu type is a Toggle, that means we can select more than one
+    # item at the same time, so our value is really a bit mask.
     if parm_template.menuType() == hou.menuType.StringToggle:
         # Check which items are selected.
         for i in range(num_items):
@@ -232,7 +232,7 @@ def eval_parm_as_strip(parm: hou.Parm) -> tuple[bool, ...]:
             if value & mask:
                 values[i] = True
 
-    # Value is just the selected index so set that one to True.
+    # Value is just the selected index, so set that one to True.
     else:
         values[value] = True
 
@@ -301,13 +301,17 @@ def eval_parm_tuple_as_vector(
     value = parm_tuple.eval()
     size = len(value)
 
-    if size == 2:  # noqa: PLR2004
-        return hou.Vector2(value)
+    match size:
+        case 2:
+            result = hou.Vector2(value)
 
-    if size == 3:  # noqa: PLR2004
-        return hou.Vector3(value)
+        case 3:
+            result = hou.Vector3(value)
 
-    return hou.Vector4(value)
+        case 4:  # pragma: no branch
+            result = hou.Vector4(value)
+
+    return result
 
 
 def find_matching_parent_parm(parm: hou.Parm, *, stop_at_locked_hda: bool = True) -> hou.Parm | None:
@@ -347,10 +351,11 @@ def find_parameters_using_variable(variable: str) -> tuple[hou.Parm, ...]:
 
     The variable name can be supplied with or without a $.
 
-    Variable usage that includes {} to help with disambiguation will also be automatically found.
+    Variable usage that includes {} to help with disambiguation will also
+    be automatically found.
 
     This will match only the exact usage.  For example, if you
-    search for $HIP the result would not include any parameters
+    search for $HIP, the result would not include any parameters
     using $HIPNAME or $HIPFILE.
 
     Args:
@@ -361,18 +366,18 @@ def find_parameters_using_variable(variable: str) -> tuple[hou.Parm, ...]:
     """
     search_variable = variable.replace("{", "").replace("}", "")
 
-    # If the variable doesn't start with $ we need to add it.
+    # If the variable doesn't start with $, we need to add it.
     if not variable.startswith("$"):
         search_variable = "$" + search_variable
 
     disambiguated_variable = f"${{{search_variable[1:]}}}"
 
-    def _checker(value, target_variable):  # type: ignore
+    def _checker(value, target_variable):  # noqa: ANN001,ANN202
         # We need to escape the $ since it's a special regex character.
         var = "\\" + target_variable
 
         # Regex to match the variable string but ensuring that it matches exactly.
-        # For example of you are looking for $HIP you want to ensure you don't also
+        # For example, if you are looking for '$HIP', you want to ensure you don't also
         # match $HIPNAME or $HIPFILE
         return bool(re.search(f"(?=.*{var}(?![a-zA-Z]))", value))
 
@@ -406,12 +411,12 @@ def get_multiparm_containing_folders(
     If the name is contained in one or more multiparm folders, the returned templates
     will be ordered from innermost to outermost
 
-    |_ outer
-      |_ inner#
-        |_ param#_#
+    outer
+      inner#
+        param#_#
 
     In a situation like above, querying for containing folders of param#_# would
-    result in a tuple ordered as follows: (<hou.FolderParmTemplate inner#>,  <hou.FolderParmTemplate outer>)
+    result in a tuple ordered as follows: (<hou.FolderParmTemplate inner#>, <hou.FolderParmTemplate outer>)
 
     Args:
         name: The name of the parameter to get the containing names for.
@@ -432,7 +437,7 @@ def get_multiparm_containing_folders(
         if is_parm_template_multiparm_folder(containing_folder):
             containing_folders.append(containing_folder)
 
-        # Try to find the parent containing folder.
+        # Try to find the parent-containing folder.
         try:
             containing_folder = parm_template_group.containingFolder(containing_folder)
 
@@ -449,9 +454,9 @@ def get_multiparm_container_offsets(name: str, parm_template_group: hou.ParmTemp
     If the name is contained in one or more multiparm folders, the returned offsets
     will be ordered outermost to innermost
 
-    |_ outer (starting offset 0)
-      |_ inner# (starting offset 1)
-        |_ param#_#
+    outer (starting offset 0)
+      inner# (starting offset 1)
+        param#_#
 
     In a situation like above, querying for containing offsets of param#_# would
     result in a tuple ordered as follows: (0, 1)
@@ -463,11 +468,11 @@ def get_multiparm_container_offsets(name: str, parm_template_group: hou.ParmTemp
     Returns:
         A tuple of containing multiparm offsets, if any.
     """
-    # A list of contain folders.
+    # A list of containing folders.
     containing_folders = get_multiparm_containing_folders(name, parm_template_group)
 
-    # The containing folder list is ordered by folder closest to the base parameter.
-    # We want to process that list in reverse so the first offset item will be for the
+    # The containing folder list is ordered by the folder closest to the base parameter.
+    # We want to process that list in reverse, so the first offset item will be for the
     # outermost parameter and match the ordered provided by the user.
     return tuple(get_multiparm_start_offset(folder) for folder in reversed(containing_folders))
 
@@ -518,7 +523,7 @@ def get_multiparm_siblings(parm: hou.Parm | hou.ParmTuple) -> dict:
         parm_name = resolve_multiparm_tokens(name, indices)
         parm_tuple = node.parmTuple(parm_name)
 
-        # If the parm tuple has a size of 1 then just get the parm.
+        # If the parm tuple has a size of 1, then just get the parm.
         if len(parm_tuple) == 1:
             parm_tuple = parm_tuple[0]
 
@@ -545,7 +550,7 @@ def get_multiparm_start_offset(parm_template: hou.ParmTemplate) -> int:
     return int(parm_template.tags().get("multistartoffset", 1))
 
 
-def get_multiparm_template_name(parm: hou.Parm | hou.ParmTuple) -> str | None:  # type: ignore  # noqa: RET503
+def get_multiparm_template_name(parm: hou.Parm | hou.ParmTuple) -> str | None:  # noqa: RET503
     """Return a multiparm instance's parameter template name.
 
     Args:
@@ -637,7 +642,7 @@ def is_parm_tuple_vector(parm_tuple: hou.ParmTuple) -> bool:
     return parm_template.namingScheme() == hou.parmNamingScheme.XYZW
 
 
-def resolve_multiparm_tokens(name: str, indices: int | list[int] | tuple[int, ...]) -> str:
+def resolve_multiparm_tokens(name: str, indices: int | Sequence[int]) -> str:
     """Resolve a multiparm token string with the supplied indices.
 
     Args:
@@ -648,14 +653,15 @@ def resolve_multiparm_tokens(name: str, indices: int | list[int] | tuple[int, ..
         The resolved string.
     """
     # Support passing in just a single value.
-    if not isinstance(indices, (list, tuple)):
+    if isinstance(indices, int):
         indices = [indices]
 
     # Validate that there are at least enough indices for the number of tokens.
     _validate_multiparm_resolve_values(name, indices)
 
+    num_tokens = name.count("#")
     # Clamp the number of indices to the number of tokens.
-    indices = indices[: name.count("#")]
+    indices = indices[:num_tokens]
 
     name_components = name.split("#")
 
@@ -668,7 +674,7 @@ def resolve_multiparm_tokens(name: str, indices: int | list[int] | tuple[int, ..
 
 
 def unexpanded_string_multiparm_instance(
-    node: hou.OpNode, name: str, indices: list[int] | int, *, raw_indices: bool = False
+    node: hou.OpNode, name: str, indices: Sequence[int] | int, *, raw_indices: bool = False
 ) -> tuple[str, ...] | str:
     """Get the unexpanded string of a multiparm parameter by index.
 
@@ -690,7 +696,7 @@ def unexpanded_string_multiparm_instance(
         node: The node to evaluate the parameter on.
         name: The base parameter name.
         indices: The multiparm indices.
-        raw_indices: Whether the indices are 'raw'and should not try and take the folder offset into account.
+        raw_indices: Whether the indices are 'raw' and should not try and take the folder offset into account.
 
     Returns:
         The evaluated parameter value.
@@ -715,19 +721,22 @@ def unexpanded_string_multiparm_instance(
         raise exceptions.ParameterIsNotAStringError(parm_template)
 
     # Handle directly passing a single index.
-    if not isinstance(indices, (list, tuple)):
+    if isinstance(indices, int):
         indices = [indices]
 
     if not raw_indices:
         offsets = get_multiparm_container_offsets(name, ptg)
 
         # Adjust any supplied offsets with the multiparm offset.
-        indices = [idx + offset for idx, offset in zip(indices, offsets)]
+        things = [idx + offset for idx, offset in zip(indices, offsets, strict=True)]
+
+    else:
+        things = indices
 
     # Validate that enough indices were passed.
-    _validate_multiparm_resolve_values(name, indices)
+    _validate_multiparm_resolve_values(name, things)
 
-    full_name = resolve_multiparm_tokens(name, indices)
+    full_name = resolve_multiparm_tokens(name, things)
 
     parm_tuple = node.parmTuple(full_name)
 

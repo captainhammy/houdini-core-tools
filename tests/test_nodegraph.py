@@ -1,5 +1,11 @@
 """Test the houdini_core_tools.nodegraph module."""
 
+# Future
+from __future__ import annotations
+
+# Standard Library
+from typing import TYPE_CHECKING
+
 # Third Party
 import pytest
 
@@ -9,13 +15,16 @@ from houdini_core_tools import nodegraph
 # Houdini
 import nodegraphtitle
 
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
 # Tests
 
 
 class TestNodeGraphTitleManager:
     """Test houdini_core_tools.nodegraph.NodeGraphTitleManager."""
 
-    def test___init__(self):
+    def test___init__(self) -> None:
         """Test object initialization."""
         inst = nodegraph.NodeGraphTitleManager()
 
@@ -27,7 +36,7 @@ class TestNodeGraphTitleManager:
         assert inst is inst2
 
     @pytest.mark.parametrize("has_existing_title", [False, True])
-    def test__set_title(self, mocker, has_existing_title):
+    def test__set_title(self, mocker: MockerFixture, has_existing_title: bool) -> None:
         """Test NodeGraphTitleManager._set_title()."""
         mgr = nodegraph.NodeGraphTitleManager()
 
@@ -37,7 +46,7 @@ class TestNodeGraphTitleManager:
         mock_func.return_value = "Existing" if has_existing_title else ""
         mocker.patch.object(mgr, "_original_left", mock_func)
 
-        def test_func():
+        def test_func() -> str:
             return "this is a title"
 
         mgr._set_title(
@@ -56,7 +65,7 @@ class TestNodeGraphTitleManager:
 
         assert result == expected
 
-    def test_reset_title(self):
+    def test_reset_title(self) -> None:
         """Test NodeGraphTitleManager.reset_title()."""
         mgr = nodegraph.NodeGraphTitleManager()
 
@@ -66,7 +75,7 @@ class TestNodeGraphTitleManager:
 
         assert nodegraphtitle.networkEditorTitleLeft == mgr._original_left
 
-    def test_set_dynamic_title(self, mocker):
+    def test_set_dynamic_title(self, mocker: MockerFixture) -> None:
         """Test NodeGraphTitleManager.set_dynamic_title()."""
         mgr = nodegraph.NodeGraphTitleManager()
 
@@ -76,7 +85,7 @@ class TestNodeGraphTitleManager:
         mock_func.return_value = "Existing"
         mocker.patch.object(mgr, "_original_right", mock_func)
 
-        def test_func():
+        def test_func() -> str:
             return "dynamic value"
 
         mgr.set_dynamic_title(nodegraph.NodeGraphTitleLocation.RIGHT, test_func)
@@ -85,7 +94,7 @@ class TestNodeGraphTitleManager:
 
         assert nodegraphtitle.networkEditorTitleRight(mock_editor) == "dynamic value - Existing"
 
-    def test_static_title(self, mocker):
+    def test_static_title(self, mocker: MockerFixture) -> None:
         """Test NodeGraphTitleManager.set_static_title()."""
         mgr = nodegraph.NodeGraphTitleManager()
 

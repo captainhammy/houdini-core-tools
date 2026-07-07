@@ -1,5 +1,8 @@
 """Test the houdini_core_tools.node_types module."""
 
+# Future
+from __future__ import annotations
+
 # Third Party
 import pytest
 
@@ -13,7 +16,7 @@ pytestmark = pytest.mark.usefixtures("load_module_test_hip_file")
 
 
 @pytest.mark.parametrize("pass_type", (False, True))
-def test_get_node_type_tool(obj_test_node, pass_type):
+def test_get_node_type_tool(obj_test_node: hou.ObjNode, pass_type: bool) -> None:
     """Test houdini_core_tools.node_types.get_node_type_tool()."""
     box = obj_test_node.node("BOX")
 

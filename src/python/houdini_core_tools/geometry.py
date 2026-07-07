@@ -27,7 +27,7 @@ def _set_all_shared_values(attribute: hou.Attrib, value: str) -> None:
         value: The value to set.
 
     Raises:
-        InvalidAttributeTypeError: If an invalid attribute type ie passed.
+        InvalidAttributeTypeError: If an invalid attribute type is passed.
     """
     geometry = attribute.geometry()
 
@@ -57,7 +57,7 @@ def _set_group_shared_values(
         value: The value to set.
 
     Raises:
-        InvalidAttributeTypeError: If an invalid attribute type ie passed.
+        InvalidAttributeTypeError: If an invalid attribute type is passed.
     """
     geometry = attribute.geometry()
 
@@ -265,7 +265,7 @@ def geo_details_match(geometry1: hou.Geometry, geometry2: hou.Geometry) -> bool:
 
 
 def geometry_has_prims_with_shared_vertex_points(geometry: hou.Geometry) -> bool:
-    """Check if the geometry contains any primitives which have more than one vertex referencing the same point.
+    """Check if the geometry contains any primitives that have more than one vertex referencing the same point.
 
     Args:
         geometry: The geometry to check.
@@ -287,8 +287,8 @@ def geometry_has_prims_with_shared_vertex_points(geometry: hou.Geometry) -> bool
 def get_oriented_point_transform(point: hou.Point) -> hou.Matrix4:
     """Get a transform matrix from a point.
 
-    This matrix may be the result of standard point instance attributes or if the
-    point has any non-raw geometry primitives bound to it (PackedPrim, Quadric, VDB, Volume)
+    This matrix may be the result of standard point instance attributes, or if the
+    point has any non-raw geometry primitives bound to it (PackedPrim, Quadric, VDB, Volume),
     then the transform from the first primitive will be returned.
 
     Args:
@@ -308,7 +308,7 @@ def get_oriented_point_transform(point: hou.Point) -> hou.Matrix4:
         # something strange.
         prim = prims[0]
 
-        # If the primitive is a Face of Surface we can't do anything.
+        # If the primitive is a Face or Surface, we can't do anything.
         if isinstance(prim, (hou.Face, hou.Surface)):
             raise exceptions.PrimitiveIsRawGeometryError(point)
 
@@ -337,7 +337,7 @@ def get_points_from_list(geometry: hou.Geometry, point_list: Sequence[int]) -> t
     if not point_list:
         return ()
 
-    # Convert the list of integers to a space separated string.
+    # Convert the list of integers to a space-separated string.
     point_str = " ".join([str(i) for i in point_list])
 
     # Glob for the specified points.
@@ -348,33 +348,33 @@ def get_prims_from_list(geometry: hou.Geometry, prim_list: Sequence[int]) -> tup
     """Convert a list of primitive numbers to hou.Prim objects.
 
     Args:
-        geometry: The geometry to get prims for.
+        geometry: The geometry to get primitives for.
         prim_list: A list of prim numbers.
 
     Returns:
-        Matching prims on the geometry.
+        Matching primitives on the geometry.
     """
     # Return an empty tuple if the prim list is empty.
     if not prim_list:
         return ()
 
-    # Convert the list of integers to a space separated string.
+    # Convert the list of integers to a space-separated string.
     prim_str = " ".join([str(i) for i in prim_list])
 
-    # Glob for the specified prims.
+    # Glob for the specified primitives.
     return geometry.globPrims(prim_str)
 
 
 def get_primitives_with_shared_vertex_points(
     geometry: hou.Geometry,
 ) -> tuple[hou.Prim, ...]:
-    """Get any primitives in the geometry which have more than one vertex referencing the same point.
+    """Get any primitives in the geometry that have more than one vertex referencing the same point.
 
     Args:
         geometry: The geometry to check.
 
     Returns:
-        A list of any primitives which have shared vertex points.
+        A list of any primitives that have shared vertex points.
     """
     prims = []
     for prim in geometry.iterPrims():
@@ -433,7 +433,7 @@ def num_points(geometry: hou.Geometry) -> int:
         geometry: The geometry to get the point count for.
 
     Returns:
-        The point count:
+        The point count
     """
     return geometry.intrinsicValue("pointcount")
 
@@ -448,7 +448,7 @@ def num_prims(geometry: hou.Geometry) -> int:
         geometry: The geometry to get the primitive count for.
 
     Returns:
-        The primitive count:
+        The primitive count
     """
     return geometry.intrinsicValue("primitivecount")
 
@@ -618,11 +618,11 @@ def reverse_prim(prim: hou.Prim) -> None:
         prim: The primitive to reverse.
 
     Raises:
-        GeometryPermissionError: If the target geometry is read only.
+        hou.GeometryPermissionError: If the target geometry is read-only.
     """
     geometry = prim.geometry()
 
-    # Make sure the geometry is not read only.
+    # Make sure the geometry is not read-only.
     if geometry.isReadOnly():
         raise hou.GeometryPermissionError
 
@@ -640,7 +640,7 @@ def set_shared_string_attrib(
 ) -> None:
     """Set a string attribute value for elements.
 
-    If group is None, all elements will receive the value.  If a group
+    If the group is None, all elements will receive the value.  If a group
     is passed, only the elements in the group will be set.
 
     Args:

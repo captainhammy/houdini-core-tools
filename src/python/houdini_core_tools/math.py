@@ -13,7 +13,7 @@ from houdini_core_tools import exceptions
 import hou
 
 
-def build_instance_matrix(  # noqa: PLR0913,PLR0917
+def build_instance_matrix(  # noqa: PLR0913, PLR0917
     position: hou.Vector3,
     direction: hou.Vector3 | None = None,
     pscale: float = 1.0,
@@ -32,11 +32,11 @@ def build_instance_matrix(  # noqa: PLR0913,PLR0917
     no up vector is given, the Z axis will be oriented to point in the supplied
     direction.
 
-    If a rotation quaternion is specified, the orientation will be additionally
-    transformed by the rotation.
+    If a rotation quaternion is specified, the rotation will additionally
+    transform the orientation.
 
-    If a translation is specified, the entire frame of reference will be moved
-    by this translation (unaffected by the scale or rotation).
+    If a translation is specified, this translation will translate the entire frame of reference
+    (unaffected by the scale or rotation).
 
     If a pivot is specified, use it as the local transformation of the
     instance.
@@ -148,7 +148,7 @@ def matrix_set_translates(matrix: hou.Matrix4, translates: tuple[float, float, f
         translates: The translation values to set.
     """
     # The translations are stored in the first 3 columns of the last row of the
-    # matrix. To set the values we just need to set the corresponding columns
+    # matrix. To set the values, we just need to set the corresponding columns
     # to the matching components in the vector.
     for i in range(3):
         matrix.setAt(3, i, translates[i])
@@ -171,11 +171,11 @@ def vector_component_along(vector: hou.Vector3, target_vector: hou.Vector3) -> f
 def vector_compute_dual(vector: hou.Vector3) -> hou.Matrix3:
     """Compute the dual of the vector.
 
-    The dual is a matrix which acts like the cross product when multiplied by
+    The dual is a matrix that acts like the cross-product when multiplied by
     other vectors.
 
-    The following are equivalent:
-        - A = vector_compute_dual(a) ; c = b * A.transposed()
+    The following is equivalent:
+        - A = vector_compute_dual(a); c = b * A.transposed()
         - c = cross(a, b)
 
     Args:
