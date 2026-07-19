@@ -127,7 +127,7 @@ class temporarily_unlock_parameters(ContextDecorator):
                 # useful information like the offending parameter, we'll re-raise
                 # an exception with a better message.
                 except hou.PermissionError as inst:
-                    raise hou.PermissionError(  # noqa: TRY003
+                    raise hou.PermissionError(  # ruff:ignore[raise-vanilla-args]
                         f"Error setting lock status for {parm.path()}"
                     ) from inst
 

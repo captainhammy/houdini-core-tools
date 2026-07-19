@@ -75,9 +75,9 @@ def make_houdini_menu(pre_items: Sequence[tuple[str, str]] | None = None, *, add
         The wrapped function.
     """
 
-    def decorator(func):  # noqa: ANN001, ANN202
+    def decorator(func):  # ruff:ignore[missing-type-function-argument, missing-return-type-private-function]
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+        def wrapper(*args, **kwargs):  # ruff:ignore[missing-type-args, missing-type-kwargs, missing-return-type-private-function]
             # Store the wrapped function result.
             result = func(*args, **kwargs)
 

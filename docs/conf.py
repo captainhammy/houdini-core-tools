@@ -9,7 +9,6 @@ from datetime import date
 from dunamai import Pattern, Version
 from sphinx_pyproject import SphinxConfig
 
-
 sys.path.insert(0, pathlib.Path("../src/python").resolve().as_posix())
 
 try:
@@ -27,8 +26,6 @@ config = SphinxConfig(
 project = config.name
 copyright = f"{date.today().year}, {config.author}"
 
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -51,11 +48,11 @@ intersphinx_mapping = {
 autodoc_mock_imports = ["hou", "nodegraphtitle"]
 autodoc_member_order = "bysource"
 
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 nitpicky = True
-nitpick_ignore = [("py:const", "None")]
+nitpick_ignore = [
+    ("py:const", "None"),
+    ("py:class", "JSONValue")
+]

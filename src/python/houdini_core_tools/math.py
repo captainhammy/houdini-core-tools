@@ -13,7 +13,7 @@ from houdini_core_tools import exceptions
 import hou
 
 
-def build_instance_matrix(  # noqa: PLR0913, PLR0917
+def build_instance_matrix(  # ruff:ignore[too-many-arguments, too-many-positional-arguments]
     position: hou.Vector3,
     direction: hou.Vector3 | None = None,
     pscale: float = 1.0,

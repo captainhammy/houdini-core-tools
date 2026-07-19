@@ -35,7 +35,7 @@ However, if there are unsaved changes, it will raise an exception:
     Traceback (most recent call last):
       File "<console>", line 1, in <module>
       File "python/houdini_core_tools/hip_file.py", line 99, in wrapper
-      raise hou.OperationFailed("Hip file has unsaved changes")  # noqa: TRY003
+      raise hou.OperationFailed("Hip file has unsaved changes")  # ruff:ignore[raise-vanilla-args]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     hou.OperationFailed: The attempted operation failed.
     Hip file has unsaved changes
@@ -51,7 +51,7 @@ abort.
     Traceback (most recent call last):
       File "<console>", line 1, in <module>
       File "python/houdini_core_tools/hip_file.py", line 95, in wrapper
-        raise hou.OperationFailed("Hip file save declined")  # noqa: TRY003
+        raise hou.OperationFailed("Hip file save declined")  # ruff:ignore[raise-vanilla-args]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     hou.OperationFailed: The attempted operation failed.
     Hip file save declined
