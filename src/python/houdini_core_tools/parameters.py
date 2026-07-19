@@ -372,7 +372,7 @@ def find_parameters_using_variable(variable: str) -> tuple[hou.Parm, ...]:
 
     disambiguated_variable = f"${{{search_variable[1:]}}}"
 
-    def _checker(value, target_variable):  # noqa: ANN001,ANN202
+    def _checker(value, target_variable):  # ruff:ignore[missing-type-function-argument, missing-return-type-private-function]
         # We need to escape the $ since it's a special regex character.
         var = "\\" + target_variable
 
@@ -550,7 +550,7 @@ def get_multiparm_start_offset(parm_template: hou.ParmTemplate) -> int:
     return int(parm_template.tags().get("multistartoffset", 1))
 
 
-def get_multiparm_template_name(parm: hou.Parm | hou.ParmTuple) -> str | None:  # noqa: RET503
+def get_multiparm_template_name(parm: hou.Parm | hou.ParmTuple) -> str | None:  # ruff:ignore[implicit-return]
     """Return a multiparm instance's parameter template name.
 
     Args:

@@ -74,9 +74,9 @@ def check_unsaved_changes(*, prompt: bool = False) -> Callable:
         The wrapped function.
     """
 
-    def decorator(func):  # noqa:ANN001,ANN202
+    def decorator(func):  # ruff:ignore[missing-type-function-argument, missing-return-type-private-function]
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+        def wrapper(*args, **kwargs):  # ruff:ignore[missing-type-args, missing-type-kwargs, missing-return-type-private-function]
             if hou.hipFile.hasUnsavedChanges():
                 if hou.isUIAvailable() and prompt:
                     choice = hou.ui.displayCustomConfirmation(
@@ -92,10 +92,10 @@ def check_unsaved_changes(*, prompt: bool = False) -> Callable:
                         hou.hipFile.save()
 
                     else:
-                        raise hou.OperationFailed("Hip file save declined")  # noqa: TRY003
+                        raise hou.OperationFailed("Hip file save declined")  # ruff:ignore[raise-vanilla-args]
 
                 else:
-                    raise hou.OperationFailed("Hip file has unsaved changes")  # noqa: TRY003
+                    raise hou.OperationFailed("Hip file has unsaved changes")  # ruff:ignore[raise-vanilla-args]
 
             # Return the wrapped function result.
             return func(*args, **kwargs)

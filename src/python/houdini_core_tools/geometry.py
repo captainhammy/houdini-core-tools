@@ -465,7 +465,7 @@ def num_vertices(geometry: hou.Geometry) -> int:
     return geometry.intrinsicValue("vertexcount")
 
 
-def point_instance_transform(point: hou.Point) -> hou.Matrix4:  # noqa: PLR0914
+def point_instance_transform(point: hou.Point) -> hou.Matrix4:  # ruff:ignore[too-many-locals]
     """Get a point's instance transform based on existing attributes.
 
     Args:
